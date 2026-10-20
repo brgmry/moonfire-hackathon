@@ -1,22 +1,32 @@
 # Brainstorming Bergen
 
-## Decision: Roll-up scout, thesis taken live from the room
+## Decision: idea 1, thesis taken live from the room
 - **Input:** a one-line thesis typed on stage, taken from the audience.
-- **Crew:** scout, analyst, skeptic (reviewer), writer, running in separate Sparkles sandboxes, always on.
+- **Crew:** scout, skeptic, researcher, writer, reviewer, sender, inbox; separate Sparkles sandboxes, always on.
 - **UI:** one screen, visual, little text. Targets appear as cards and the skeptic visibly kills weak ones. Click a card to open its audit trail: each claim with a source link and a pass or fail mark.
-- **Demo:** thesis in, cards stream in and get killed, survivors ranked, one memo opened. 2 to 3 minutes.
+- **Demo:** thesis in, cards stream in and get killed, emails written and sent, a live reply comes back and a call is proposed. 2 to 3 minutes.
 - **Models:** Claude throughout (Anthropic credits are the prize).
 - **Check before Thursday:** Sparkles sandbox web access, rules on pre-built code and live data.
 
 Outcome is a finished work product, not code. Always-on: the crew keeps running and picks up new work without a human. Each idea has a splitter, workers in separate sandboxes, and a reviewer that can reject.
 
-## 1. Roll-up scout
-Pick a niche (UK MSPs, insurance brokers). The crew keeps finding owner-led companies and turns each into a one-page teardown.
-- **Scout:** finds companies and owners (Companies House, websites, LinkedIn).
-- **Analyst:** estimates size, margin and succession signals.
-- **Skeptic (reviewer):** tries to kill each target; weak ones are dropped with a reason.
-- **Writer:** one-page memo and a draft first message to the owner.
-- **Result:** a ranked, cross-checked target list that grows while the demo runs.
+## 1. Roll-up scout: thesis in, first conversation out
+Finds targets, kills the weak ones, finds each owner's pain point, writes and sends the first email, then works the replies until a call is booked. The outbound half is my edge: it is what I built Throxy on.
+
+**The story:** A London founder I know is rolling up UK staffing agencies: £6M committed, about 36,000 agencies to choose from. Finding targets was the easy part. The owners are 60+, read him as a competitor and won't take the call, so he now pays a broker on retainer just to get a first conversation.
+
+**The crew:**
+  1. **Scout:** finds targets that fit the thesis.
+  2. **Skeptic:** kills the weak ones, with a reason on the card.
+  3. **Researcher:** finds the owner and one specific pain point per company (succession, a key client, hiring, a bad review), each with a source.
+  4. **Writer:** a short first email built on that pain point, as a successor not a competitor.
+  5. **Reviewer:** rejects any email that is generic or makes an unsourced claim.
+  6. **Sender:** sends it.
+  7. **Always-on inbox:** watches for replies, classifies them, answers and proposes a time. This is the always-on part.
+
+**On stage:** sends go to inboxes we control (teammates, a judge who volunteers), so a live reply comes back in the demo. Real owners only with an approve click.
+
+**Close:** "this is what he pays a broker a retainer for, built in three hours." Name him only if he says yes, otherwise "a founder I know".
 
 ## 2. Investment committee in a box
 Give it one company. Four agents argue it out.

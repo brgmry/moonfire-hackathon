@@ -4,11 +4,25 @@
 - **Input:** a one-line thesis typed on stage, taken from the audience.
 - **Crew:** scout, skeptic, researcher, writer, reviewer, sender, inbox; separate Sparkles sandboxes, always on.
 - **UI:** one screen, visual, little text. Targets appear as cards and the skeptic visibly kills weak ones. Click a card to open its audit trail: each claim with a source link and a pass or fail mark.
-- **Demo:** thesis in, cards stream in and get killed, emails written and sent, a live reply comes back and a call is proposed. 2 to 3 minutes.
+- **Multiplayer first:** the run is a URL, not a window. See below.
+- **Demo:** thesis in, the run URL goes on the screen and in the room's chat, cards stream in on every phone that opened it and get killed, a judge kills one from their phone, emails written and sent, a live reply comes back and a call is proposed. 2 to 3 minutes.
 - **Models:** Claude throughout (Anthropic credits are the prize).
-- **Check before Thursday:** Sparkles sandbox web access, rules on pre-built code and live data.
+- **Check before Thursday:** Sparkles sandbox web access, rules on pre-built code and live data, and where the orchestrator runs: a Sparkles sandbox with a public URL, or our laptop behind a tunnel (the loop stays on our side either way).
 
 Outcome is a finished work product, not code. Always-on: the crew keeps running and picks up new work without a human. Each idea has a splitter, workers in separate sandboxes, and a reviewer that can reject.
+
+## Multiplayer first (decided 20 Oct)
+The run is a shared object with a URL, not a chat one person watches. Aaron Epstein's RFS (Multiplayer AI) word for word: anyone on the team drops into the same live agent session, watches, redirects, hands off. Designed in from the start it costs under an hour; retrofitted it costs the demo.
+
+- **One run, one URL:** `/run/<id>`. The thesis typed on stage creates it. The URL goes on the big screen and in the room's chat. Every phone that opens it sees the same cards.
+- **Server holds the state, clients render it.** The orchestrator keeps the cards, the audit trails and the queue. Every client is one SSE stream of events (card added, card killed, email drafted, email sent, reply received, call proposed). No client-side state beyond what is on screen.
+- **Actions are shared.** Kill a card, approve a send, un-kill a card: a POST that the server applies and broadcasts. A judge can kill a card from their phone and the room sees it die. Real sends are approve-only, from anyone with the link.
+- **Presence:** a name chip per connected person, nothing more. No cursors.
+- **The report is the card, and it is live.** Each card's audit trail (claim, source, pass or fail) is the research report on that target. Sharing the report is sharing the card URL. It keeps updating after the demo because the inbox agent keeps running.
+- **Survives the stage:** close every laptop, the run continues. Reopen the URL in the morning and the overnight replies are on the cards. That is the always-on claim, shown rather than said.
+- **Out of scope in three hours:** per-person permissions, conflict handling beyond last-write-wins, agent redirect mid-task (name it in the pitch, do not build it).
+
+**Build order:** run id and SSE first, before any agent. A fake crew that emits events into a shared URL beats a real crew in one window. Then the scout, then the skeptic, then the rest.
 
 ## 1. Roll-up scout: thesis in, first conversation out
 Finds targets, kills the weak ones, finds each owner's pain point, writes and sends the first email, then works the replies until a call is booked. The outbound half is my edge: it is what I built Throxy on.

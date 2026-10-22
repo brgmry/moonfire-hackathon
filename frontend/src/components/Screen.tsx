@@ -23,12 +23,13 @@ function layout(chunks: Chunk[], W: number, H: number): Record<string, Rect> {
 
 function Avatar({ a, rects, W, idx, now, onBubble }: { a: Agent; rects: Record<string, Rect>; W: number; idx: number; now: number; onBubble?: never }) {
   const r = a.chunkId ? rects[a.chunkId] : undefined;
-  const target = r ? { x: r.x + 6 + (idx % 3) * 10, y: r.y + 12 } : { x: W / 2 - 6, y: 8 };
+  const target = r ? { x: r.x + 4 + (idx % 3) * 14, y: r.y + 12 } : { x: W / 2 - 18, y: 4 };
   const [pos, setPos] = useState({ x: W / 2 - 6, y: 8 });
   useLayoutEffect(() => { const id = requestAnimationFrame(() => setPos(target)); return () => cancelAnimationFrame(id); }, [target.x, target.y]);
-  const found = a.lastFoundAt && now - Date.parse(a.lastFoundAt) < 1000;
+  const found = !!a.lastFoundAt && now - Date.parse(a.lastFoundAt) < 1200;
+  const frame = found ? "found" : a.status === "done" ? "idle" : (Math.floor(now / 250) % 2 ? "working" : "idle");
   void onBubble;
-  return <Sprite role={a.role} className={`${a.status === "done" ? "done" : ""} ${found ? "found" : ""}`} style={{ left: pos.x, top: pos.y }} title={`${a.role} ${a.chunkId ?? ""} ${a.file ?? ""}`.trim()} />;
+  return <Sprite role={a.role} frame={frame} className={`${a.status === "done" ? "done" : ""} ${found ? "found" : ""}`} style={{ left: pos.x, top: pos.y }} title={`${a.role} ${a.chunkId ?? ""} ${a.file ?? ""}`.trim()} />;
 }
 
 export function Screen({ state, now }: { state: RunState; now: number }) {
@@ -71,11 +72,11 @@ export function Screen({ state, now }: { state: RunState; now: number }) {
       {bubbles.map(({ f, finding }) => {
         const a = state.agents[finding!.agentId];
         const r = a?.chunkId ? rects[a.chunkId] : undefined;
-        const x = r ? Math.min(r.x + 6, size.W * 0.5) : 8, y = r ? Math.max(0, r.y - 14) : 24;
+        const x = r ? Math.min(r.x + 6, size.W * 0.5) : 8, y = r ? Math.max(0, r.y - 18) : 24;
         return <div key={f.id} className={`bub ${finding!.severity}`} style={{ left: x, top: y }}>{finding!.file.split("/").pop()}:{finding!.line} {finding!.note}</div>;
       })}
       <div className="dock">
-        {docked.map((a) => <Sprite key={a.agentId} role={a.role} className={a.status === "done" ? "done" : ""} title={a.role} />)}
+        {docked.map((a) => { const found = !!a.lastFoundAt && now - Date.parse(a.lastFoundAt) < 1200; return <Sprite key={a.agentId} role={a.role} scale={1.25} frame={found ? "found" : a.status === "done" ? "idle" : (Math.floor(now / 250) % 2 ? "working" : "idle")} className={a.status === "done" ? "done" : ""} title={a.role} />; })}
         {state.compile && <span className="lbl">builds {state.compile.compiles ? `${Math.round(state.compile.durationMs / 1000)}s ${(state.compile.buildSizeBytes / 1e6).toFixed(1)}MB ${state.compile.warnings} warn` : "FAIL"}</span>}
         {state.run && <span className="lbl">{state.run.kind === "api" ? `endpoints ${state.run.endpointsOk}/${state.run.endpointsTotal}` : `tests ${state.run.testsPassed}/${state.run.testsPassed + state.run.testsFailed}`}</span>}
         {state.claims.length > 0 && <span className="lbl">claims {state.claims.filter((c) => c.status === "delivered").length}/{state.claims.length}</span>}

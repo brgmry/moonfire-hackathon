@@ -8,7 +8,7 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregi
 gcloud artifacts repositories create crew --repository-format=docker --location="$REGION" || true
 gcloud storage buckets create "gs://$GCS_BUCKET" --location="$REGION" --uniform-bucket-level-access || true
 # internal-token is generated here; anthropic-key is created by hand: printf '%s' "$KEY" | gcloud secrets create anthropic-key --data-file=-
-gcloud secrets describe internal-token >/dev/null 2>&1 || openssl rand -hex 24 | tr -d '\n' | gcloud secrets create internal-token --data-file=-
+gcloud secrets describe internal-token >/dev/null 2>&1 || python -c 'import secrets,sys; sys.stdout.write(secrets.token_hex(24))' | gcloud secrets create internal-token --data-file=-
 # Lab account cannot edit project IAM. The default compute SA already has roles/editor (run jobs, storage, actAs),
 # so it only needs per-secret access, which secretmanager.admin can grant.
 SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"

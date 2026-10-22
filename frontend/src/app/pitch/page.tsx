@@ -29,6 +29,18 @@ export default function Pitch() {
     <div className="desk">
       <MenuBar menus={menus} title="README vs Reality" />
       <div className="pitch">
+        <Window title="Why it matters" className="p0" tip="the real-world outcome">
+          <p className="huge">Signal from the slop.</p>
+          <div className="noise" aria-hidden="true">
+            {[22, 35, 18, 41, 30, 26, 38, 20, 33, 90, 28, 24, 36, 19, 31].map((h, i) => <i key={i} className={h > 80 ? "sig" : ""} style={{ height: `${h}%` }} />)}
+          </div>
+          <div className="empty center">in the age of AI-written code, reading it tells you nothing. Running it does.</div>
+          <div className="outcomes">
+            <div data-tip="score a repo before the term sheet, with receipts the partner can click"><span className="ico">VC</span><b>VC diligence</b><span>two days of associate time, in minutes</span></div>
+            <div data-tip="the repo is the only honest signal left; the leaderboard says who actually wrote what"><span className="ico">HR</span><b>Hiring</b><span>who really wrote the code</span></div>
+            <div data-tip="one rubric, every repo: a benchmark for teams, agents and AI coding tools"><span className="ico">&lt;/&gt;</span><b>Benchmarks &amp; evals</b><span>comparable scores across repos</span></div>
+          </div>
+        </Window>
         <Window title="Why · not just another agent" className="p5" tip="three reasons, hover for the argument">
           <div className="why">
             <div data-tip="one rubric, computed by code from findings. Same 100 for every repo, so a portfolio or a pipeline ranks on the same scale. An agent gives a different essay every time.">
@@ -70,11 +82,6 @@ export default function Pitch() {
               <div className="big">80</div>
               <div className="sub">/100, with receipts</div>
             </div>
-          </div>
-          <div className="who">
-            <div data-tip="technical diligence before the term sheet"><span className="ico">VC</span>diligence</div>
-            <div data-tip="the repo is the only honest signal of skill left"><span className="ico">HR</span>hiring</div>
-            <div data-tip="the leaderboard says who did the work"><span className="ico">&lt;/&gt;</span>the engineer</div>
           </div>
           <div className="stats">
             <div data-tip="what an associate spends on one repo"><b>2 days</b><span>associate</span></div>

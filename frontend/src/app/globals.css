@@ -249,3 +249,13 @@ a.plain{color:inherit}
 .badge{display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--display);font-weight:700;vertical-align:middle;margin-right:6px;image-rendering:pixelated}
 .badge.yc{width:18px;height:18px;background:#f26625;color:#fff;font-size:13px;line-height:1}
 .badge.ucl{height:18px;padding:0 5px;background:#500778;color:#fff;font-size:9px;letter-spacing:.04em}
+.noise{display:flex;gap:4px;align-items:flex-end;height:70px;padding:0 4px;border-bottom:1.5px solid var(--ink)}
+.noise i{flex:1;background:#b9b3a8;display:block}
+.noise i.sig{background:var(--good)}
+.center{text-align:center;margin:8px 0 12px}
+.outcomes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:700px){.outcomes{grid-template-columns:1fr}}
+.outcomes>div{border:1.5px solid var(--ink);background:#fff;padding:12px 10px;display:grid;justify-items:center;gap:4px;text-align:center}
+.outcomes .ico{background:var(--ink);color:#fff;padding:4px 7px;font-family:var(--display);font-size:11px}
+.outcomes b{font-family:var(--display);font-size:12px;margin-top:4px}
+.outcomes span:last-child{font-size:11px;color:#555}

@@ -4,11 +4,15 @@ Site: https://shipitornot.com. Pitch: `/pitch`. Projector: add `?stage=1` to any
 
 Before walking up: open `/pitch` on the laptop, a run URL with `?stage=1` in a second tab, and `/run/demo` in a third. Phone on 4G with the site open. Laptop volume off.
 
-## 0:00 · Why (Bergen, 20s)
-Screen: `/pitch`, top window. Three tiles, one line each, before anyone asks.
+## 0:00 · Why it matters (Bergen, 20s)
+Screen: `/pitch`, top window.
+> In the age of AI-written code, reading a repo tells you nothing. Running it does. Three people need that signal today: a VC before the term sheet, anyone hiring an engineer, and anyone benchmarking teams or coding agents.
+
+## 0:20 · Why not just another agent (Bergen, 20s)
+Screen: second window. Three tiles, one line each, before anyone asks.
 > Why not just hand the repo to Claude? Three things a chat can't do. Comparable: one rubric, every repo on the same scale. Verifiable: we built it and ran it, every point is a file, a line and a quote. Compounds: every run teaches the next and lands on a benchmark.
 
-## 0:20 · 01 The goal (Bergen, 50s)
+## 0:40 · 01 The goal (Bergen, 40s)
 Screen: scroll to window 01.
 > Every README is a pitch deck. A VC gets a repo link and a README full of claims, and an associate spends two days working out what was actually shipped. In the AI age you can't tell good code from plausible code by reading it.
 >

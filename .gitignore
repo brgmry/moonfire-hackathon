@@ -26,3 +26,6 @@ spike/data/
 .DS_Store
 *.log
 .vercel/
+
+# Anthropic keys for infra/add-keys.sh, deleted after upload
+infra/keys.local

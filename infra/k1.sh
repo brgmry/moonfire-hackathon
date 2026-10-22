@@ -9,13 +9,10 @@ gcloud artifacts repositories create crew --repository-format=docker --location=
 gcloud storage buckets create "gs://$GCS_BUCKET" --location="$REGION" --uniform-bucket-level-access || true
 # internal-token is generated here; anthropic-key is created by hand: printf '%s' "$KEY" | gcloud secrets create anthropic-key --data-file=-
 gcloud secrets describe internal-token >/dev/null 2>&1 || openssl rand -hex 24 | tr -d '\n' | gcloud secrets create internal-token --data-file=-
-# Default compute SA runs both the job and the service: it needs the secrets, the bucket and to launch job executions.
-PN=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
-SA="$PN-compute@developer.gserviceaccount.com"
-for role in roles/secretmanager.secretAccessor roles/run.developer roles/iam.serviceAccountUser roles/storage.objectAdmin roles/logging.logWriter; do
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$SA" --role="$role" --condition=None -q >/dev/null && echo "granted $role"
-done
-# Cloud Build in new projects builds as the compute SA too.
-for role in roles/artifactregistry.writer roles/storage.admin roles/logging.logWriter; do
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$SA" --role="$role" --condition=None -q >/dev/null && echo "granted $role"
+# Lab account cannot edit project IAM. The default compute SA already has roles/editor (run jobs, storage, actAs),
+# so it only needs per-secret access, which secretmanager.admin can grant.
+SA="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+gcloud secrets describe anthropic-key >/dev/null 2>&1 || printf 'placeholder' | gcloud secrets create anthropic-key --data-file=-
+for s in anthropic-key internal-token; do
+  gcloud secrets add-iam-policy-binding "$s" --member="serviceAccount:$SA" --role=roles/secretmanager.secretAccessor --condition=None -q >/dev/null && echo "granted $s"
 done

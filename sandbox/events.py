@@ -9,7 +9,9 @@ from datetime import datetime, timezone
 import httpx
 
 # Read once and removed from os.environ: repo code (installs, tests, Bash agents) inherits the env.
-_TOKEN = os.environ.pop("INTERNAL_TOKEN", "").strip()
+# RUN_TOKEN only opens this run's event log; INTERNAL_TOKEN is the fallback for older backends.
+_TOKEN = (os.environ.pop("RUN_TOKEN", "") or os.environ.get("INTERNAL_TOKEN", "")).strip()
+os.environ.pop("INTERNAL_TOKEN", None)
 
 BATCH = 20
 INTERVAL = 0.5

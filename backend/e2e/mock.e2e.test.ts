@@ -15,6 +15,8 @@ const ENV = {
   DATA_DIR: dataDir,
   ANTHROPIC_API_KEYS: "allen:sk-fake-AAAA,bergen:sk-fake-BBBB,akshay:sk-fake-CCCC",
   ANTHROPIC_KEY_BUDGETS: "allen:30,bergen:20,akshay:10",
+  RUNS_PER_IP_PER_HOUR: "1000",
+  MAX_ACTIVE_RUNS: "100",
 };
 let server: Server;
 let runId = "";
@@ -169,6 +171,26 @@ test("a fatal sandbox failure ends the run as failed, with the reason", async ()
   assert.equal(state.status, "failed");
   assert.match(state.reason, /repository not found/);
   assert.ok(!state.events.some((e: any) => e.type === "report.ready"), "no report for a run that reviewed nothing");
+});
+
+test("a per-run token only opens its own run", async () => {
+  const { createHmac } = await import("node:crypto");
+  const token = createHmac("sha256", "e2e-token").update("stub-own").digest("hex");
+  const own = await postJson(`${server.url}/internal/events`, { runId: "stub-own", events: [{ type: "agent.working", agentId: "a", file: "x" }] }, { Authorization: `Bearer ${token}` });
+  assert.equal(own.status, 200);
+  const other = await postJson(`${server.url}/internal/events`, { runId: runId, events: [{ type: "agent.working", agentId: "a", file: "x" }] }, { Authorization: `Bearer ${token}` });
+  assert.equal(other.status, 401, "a run's token must not post into another run");
+});
+
+test("runs are capped per network", async () => {
+  const capped = await startServer({ ...ENV, RUNS_PER_IP_PER_HOUR: "2", DATA_DIR: path.join(dataDir, "..", "capped") });
+  try {
+    const codes = [];
+    for (let i = 0; i < 3; i++) codes.push((await postJson(`${capped.url}/runs`, { repoUrl: "https://github.com/acme/pulse-cli", fresh: true })).status);
+    assert.deepEqual(codes, [200, 200, 429]);
+  } finally {
+    await capped.stop();
+  }
 });
 
 test("a restart restores every run from the event log", async () => {

@@ -51,6 +51,16 @@ export function listRuns(): RunState[] {
   return [...runs.values()].map((r) => r.state);
 }
 
+// Runs a sandbox is still working on. A run silent for 12 minutes is stuck, not busy.
+export function activeRuns(): number {
+  const now = Date.now();
+  return [...runs.values()].filter((r) => {
+    if (!["created", "running"].includes(r.state.status)) return false;
+    const last = r.events.at(-1)?.ts;
+    return !!last && now - Date.parse(last) < 12 * 60 * 1000;
+  }).length;
+}
+
 export function subscribe(id: string, fn: (e: Event) => void): () => void {
   const run = runs.get(id);
   if (!run) return () => {};

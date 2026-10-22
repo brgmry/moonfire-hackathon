@@ -3,7 +3,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { serve } from "@hono/node-server";
-import { appendEvent, createRun, getRun, listRuns, newRunId, restore, subscribe } from "./runs.js";
+import { activeRuns, appendEvent, createRun, getRun, listRuns, newRunId, restore, subscribe } from "./runs.js";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { headSha, loadMemory, lookup, repoKey } from "./memory.js";
 import { pickRunner } from "./runner/index.js";
 import { loadKeys, publicView } from "./keys.js";
@@ -74,13 +75,25 @@ async function repoExists(owner: string, repo: string): Promise<boolean> {
   }
 }
 
+// Anyone with the link can start a run, and each costs real credit: cap runs per network and in flight.
+const MAX_ACTIVE = Number(process.env.MAX_ACTIVE_RUNS ?? 6);
+const PER_IP_PER_HOUR = Number(process.env.RUNS_PER_IP_PER_HOUR ?? 10);
+const startsByIp = new Map<string, number[]>();
+
 app.post("/runs", async (c) => {
+  const ip = (c.req.header("x-forwarded-for") ?? "").split(",")[0].trim() || "local";
+  const now = Date.now();
+  const starts = (startsByIp.get(ip) ?? []).filter((t) => now - t < 3600_000);
+  if (starts.length >= PER_IP_PER_HOUR) return c.json({ error: `${starts.length} runs from your network in the last hour; try again later` }, 429);
+  if (activeRuns() >= MAX_ACTIVE) return c.json({ error: `the crew is busy with ${MAX_ACTIVE} runs; try again in a minute` }, 429);
   const body = await c.req.json().catch(() => ({}));
   const parsed = normalizeRepoUrl(String(body.repoUrl ?? ""));
   if (!parsed) return c.json({ error: "paste a GitHub repo link, like https://github.com/owner/repo" }, 400);
   if (process.env.RUNNER !== "mock" && !(await repoExists(parsed.owner, parsed.repo)))
     return c.json({ error: `github.com/${parsed.owner}/${parsed.repo} was not found, or it is private` }, 400);
   const repoUrl = parsed.url;
+  starts.push(now);
+  startsByIp.set(ip, starts);
   const id = newRunId();
   const run = createRun(id, repoUrl, body.by);
   appendEvent(id, { type: "run.created", repoUrl, by: body.by ?? "anon" });
@@ -177,10 +190,23 @@ app.post("/runs/:id/actions", async (c) => {
 
 const BACKEND_ONLY = new Set(["run.created", "presence.join", "presence.leave", "sandbox.started", "score.updated", "report.ready", "memory.hit", "run.finished", "action"]);
 
+// Each sandbox gets RUN_TOKEN = HMAC(INTERNAL_TOKEN, runId): a token stolen by repo code only reaches its own run.
+export function runToken(runId: string): string {
+  return createHmac("sha256", INTERNAL_TOKEN).update(runId).digest("hex");
+}
+
+function authorized(header: string | undefined, runId: string): boolean {
+  const got = Buffer.from(header ?? "");
+  return [`Bearer ${INTERNAL_TOKEN}`, `Bearer ${runToken(runId)}`].some((ok) => {
+    const want = Buffer.from(ok);
+    return got.length === want.length && timingSafeEqual(got, want);
+  });
+}
+
 app.post("/internal/events", async (c) => {
-  if (c.req.header("Authorization") !== `Bearer ${INTERNAL_TOKEN}`) return c.json({ error: "unauthorized" }, 401);
   const body = await c.req.json().catch(() => null);
   if (!body?.runId || !Array.isArray(body.events)) return c.json({ error: "body must be { runId, events: [] }" }, 400);
+  if (!authorized(c.req.header("Authorization"), String(body.runId))) return c.json({ error: "unauthorized" }, 401);
   // A run the backend did not start (a stub job, a manual test) gets created on first contact.
   if (!getRun(body.runId)) {
     createRun(body.runId, "");

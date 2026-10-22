@@ -25,7 +25,6 @@ function launch(run: RunState, extra: Record<string, string> = {}) {
     ...inherited,
     ...sandboxEnv(run, extra),
     API_URL: `http://localhost:${process.env.PORT ?? 8080}`,
-    INTERNAL_TOKEN: process.env.INTERNAL_TOKEN ?? "dev",
     MEMORY_JSON: memoryJson(),
     ...(allKeysEnv() ? { ANTHROPIC_API_KEYS: allKeysEnv() } : {}),
     WORKDIR: path.join(workdir, "work"),

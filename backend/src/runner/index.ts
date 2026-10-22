@@ -1,5 +1,6 @@
 import type { RunState } from "../types.js";
 import { weights } from "../keys.js";
+import { createHmac } from "node:crypto";
 import { mockRunner } from "./mock.js";
 import { localRunner } from "./local.js";
 import { cloudRunRunner } from "./cloudrun.js";
@@ -22,7 +23,13 @@ export function pickRunner(): Runner {
 
 // Env every sandbox gets, whichever runner starts it.
 export function sandboxEnv(run: RunState, extra: Record<string, string> = {}): Record<string, string> {
-  const env: Record<string, string> = { RUN_ID: run.id, REPO_URL: run.repoUrl, ...extra };
+  const token = (process.env.INTERNAL_TOKEN ?? "dev").trim();
+  const env: Record<string, string> = {
+    RUN_ID: run.id,
+    REPO_URL: run.repoUrl,
+    RUN_TOKEN: createHmac("sha256", token).update(run.id).digest("hex"),
+    ...extra,
+  };
   // Names and weights only; the keys themselves reach the job as the ANTHROPIC_API_KEYS secret.
   const w = weights();
   if (w) env.ANTHROPIC_KEY_WEIGHTS = w;

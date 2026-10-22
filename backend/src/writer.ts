@@ -74,7 +74,7 @@ function templateBullets(s: RunState): string[] {
 export async function writeReport(s: RunState): Promise<{ markdown: string; usage: Tokens; tokens: Tokens }> {
   let bullets: string[] = [];
   const usage: Tokens = { in: 0, out: 0, cacheRead: 0 };
-  if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) {
+  if (process.env.WRITER !== "off") {
     try {
       const client = new Anthropic();
       const r = await client.messages.create({

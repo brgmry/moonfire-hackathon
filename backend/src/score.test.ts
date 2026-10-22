@@ -23,13 +23,13 @@ function scoreFixture(file: string) {
   return score(s);
 }
 
-test("mini fixture scores 75.5 by the rubric", () => {
+test("mini fixture scores 63 by the rubric", () => {
   const r = scoreFixture(path.resolve("fixtures/mini.jsonl"));
   assert.equal(r.dimensions.claims.points, 9);
   assert.equal(r.dimensions.runs.points, 14.3);
-  assert.equal(r.dimensions.quality.points, 13);
-  assert.equal(r.dimensions.security.points, 3);
-  assert.equal(r.total, 75.5);
+  assert.equal(r.dimensions.quality.points, 6.7); // one major: 0.70 - 0.25 of 15
+  assert.equal(r.dimensions.security.points, 2); // one major: 0.70 - 0.30 of 5
+  assert.equal(r.total, 63);
 });
 
 // Bergen's fixture writes its expected total in the header, e.g. `// expected total: 67`.
@@ -54,11 +54,18 @@ test("rubric edge cases: failed explorers, big repos, missing toolchains, no bui
   assert.equal(f.dimensions.quality.points, 0);
   assert.equal(f.dimensions.quality.note, "explorers returned nothing");
 
-  // 16 explored chunks with 4 majors in quality lose as much as 4 chunks with 1 major
+  // 16 explored chunks with 4 majors lose as much as 4 chunks with 1 major
+  const small = base();
+  small.agents = Array.from({ length: 4 }, (_, i) => ({ agentId: `a_explorer_${i}`, role: "explorer", status: "done" as const, tokens: { in: 1, out: 1, cacheRead: 0 } }));
+  small.findings = [{ id: "f0", agentId: "a", chunkId: "c0", dimension: "quality" as const, severity: "major" as const, file: "a.go", line: 1, quote: "x", note: "n", valid: true }];
   const big = base();
   big.agents = Array.from({ length: 16 }, (_, i) => ({ agentId: `a_explorer_${i}`, role: "explorer", status: "done" as const, tokens: { in: 1, out: 1, cacheRead: 0 } }));
   big.findings = Array.from({ length: 4 }, (_, i) => ({ id: `f${i}`, agentId: "a", chunkId: `c${i}`, dimension: "quality" as const, severity: "major" as const, file: "a.go", line: 1, quote: "x", note: "n", valid: true }));
-  assert.equal(score(big).dimensions.quality.points, 13);
+  assert.equal(score(big).dimensions.quality.points, score(small).dimensions.quality.points);
+
+  // no evidence either way is 70%, not full marks
+  assert.equal(score(small).dimensions.architecture.points, 7);
+  assert.equal(score(small).dimensions.architecture.note, "no findings either way");
 
   // Go is not in the image: compiles and runs get the repo's average, with a note
   const g = score(big);
@@ -79,5 +86,17 @@ test("rubric edge cases: failed explorers, big repos, missing toolchains, no bui
     { id: "c1", path: "src", files: [], bytes: 1000, churn: 0, sampled: false, priority: 5 },
     { id: "c2", path: "docs", files: [], bytes: 9000, churn: 0, sampled: true, priority: 0, skipped: true },
   ];
-  assert.equal(score(sk).dimensions.architecture.points, 10);
+  assert.equal(score(sk).dimensions.architecture.points, 7, "no coverage cut from the skipped docs chunk");
+
+  // a one-claim README earns a third of the claims points
+  const one = base();
+  one.profile.packageManager = "npm";
+  one.claims = [{ id: "k1", text: "a vulnerable app", readmeLine: 1, status: "delivered", quality: 5 }];
+  assert.equal(score(one).dimensions.claims.points, 8.3);
+
+  // compileall is a syntax check: 5
+  const ca = base();
+  ca.profile.packageManager = "pip";
+  ca.compile = { compiles: true, command: "python -m compileall -q .", warnings: 0 };
+  assert.equal(score(ca).dimensions.compiles.points, 5);
 });

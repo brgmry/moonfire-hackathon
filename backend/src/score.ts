@@ -82,11 +82,13 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
       const delivered = cs.filter((c) => c.status === "delivered").length;
       const meanQ = cs.reduce((t, c) => t + (Number(c.quality) || 0), 0) / cs.length;
       const missing = cs.filter((c) => c.status === "missing").concat(cs.filter((c) => c.status === "partial"));
+      // A README that promises little earns little: under three claims, the points scale down.
+      const breadth = Math.min(1, cs.length / 3);
       d.claims = {
-        points: 15 * (delivered / cs.length) + 10 * (clamp(meanQ, 0, 5) / 5),
+        points: (15 * (delivered / cs.length) + 10 * (clamp(meanQ, 0, 5) / 5)) * breadth,
         max: MAX.claims,
         top: missing.slice(0, 3).map((c) => c.id),
-        note: `${delivered} of ${cs.length} delivered`,
+        note: `${delivered} of ${cs.length} delivered` + (breadth < 1 ? `, only ${cs.length} claim${cs.length > 1 ? "s" : ""} in the README` : ""),
       };
     }
   }
@@ -122,6 +124,9 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
     if (c?.compiles && (!c.command || c.command === "none")) {
       points = 5;
       note = "no build system";
+    } else if (c?.compiles && /compileall/.test(String(c.command))) {
+      points = 5;
+      note = "syntax check only, nothing to build";
     } else if (c?.compiles) {
       points = 7 + (warnings === 0 ? 3 : 0);
     } else if (s.profile.hasBuild === false && (Object.keys(c ?? {}).length > 0 || s.profile.name)) {
@@ -142,22 +147,28 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
   }
 
   // finding-driven dimensions only count once explorers have reported
-  const fromFindings = (dim: string, base: number, wMajor: number, wMinor: number, wGood: number, scaled: boolean) => {
+  // Finding-driven dimensions. No evidence either way is 70%, not full marks. Each major costs about a
+  // quarter of the dimension, a minor very little, a good finding earns some back; all per four chunks.
+  const BASE = 0.7;
+  const W = { major: 0.25, minor: 0.015, good: 0.06 };
+  const fromFindings = (dim: string, scaled: boolean, majorWeight = W.major) => {
     const fs = byDim(dim);
     if (!explored) {
       const anyExplorer = s.agents.some((a) => a.role === "explorer" && a.status === "done");
       return { points: 0, max: MAX[dim], top: [], note: anyExplorer ? "explorers returned nothing" : undefined };
     }
     const n = counts(fs);
-    let points = clamp(base - norm * (wMajor * n.major + wMinor * n.minor) + norm * wGood * n.good, 0, base);
+    const ratio = clamp(BASE + norm * (W.good * n.good - majorWeight * n.major - W.minor * n.minor), 0, 1);
+    let points = MAX[dim] * ratio;
     if (scaled) points *= scale;
-    return { points, max: MAX[dim], top: top(fs), note: scaled ? sampledNote : undefined };
+    const note = fs.length === 0 ? "no findings either way" : scaled ? sampledNote : undefined;
+    return { points, max: MAX[dim], top: top(fs), note };
   };
-  d.quality = fromFindings("quality", 15, 2, 0.5, 0.5, true);
-  d.architecture = fromFindings("architecture", 10, 2, 0.5, 0.5, true);
-  d.dead_code = fromFindings("dead_code", 5, 1, 0.25, 0, true);
-  d.security = fromFindings("security", 5, 2, 0.5, 0, false);
-  d.docs = fromFindings("docs", 5, 1, 0.25, 0, false);
+  d.quality = fromFindings("quality", true);
+  d.architecture = fromFindings("architecture", true);
+  d.dead_code = fromFindings("dead_code", true);
+  d.security = fromFindings("security", false, 0.3);
+  d.docs = fromFindings("docs", false);
 
   // A toolchain the sandbox lacks: compiles and runs take the repo's average on everything we could judge.
   if (toolchain) {

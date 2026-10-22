@@ -70,17 +70,21 @@ Rules: `quote` is at most 3 lines copied verbatim. `file` must appear in `repo.p
 ## Rubric (backend computes, sandbox never sends a score)
 | Dimension | Max | Formula |
 |---|---|---|
-| `claims` | 25 | `15 × delivered/total + 10 × meanQuality/5`. No README: 0 with note. |
-| `runs` | 15 | starts: 5. Tests: `10 × passed/(passed+failed)`; no tests: 3. API: `10 × endpointsOk/endpointsTotal`. |
-| `compiles` | 10 | compiles: 7. Zero warnings: 3. No build system: 5 with note. |
-| `quality` | 15 | `15 - 2 × major - 0.5 × minor + 0.5 × good`, clamp 0..15 |
-| `architecture` | 10 | `10 - 2 × major - 0.5 × minor + 0.5 × good`, clamp 0..10 |
-| `tests` | 10 | test files present: 4. Pass rate × 6. |
-| `dead_code` | 5 | `5 - 1 × major - 0.25 × minor`, clamp |
-| `security` | 5 | `5 - 2 × major - 0.5 × minor`, clamp |
-| `docs` | 5 | `5 - 1 × major - 0.25 × minor`, clamp |
+| `claims` | 25 | `(15 × delivered/total + 10 × meanQuality/5) × min(1, total/3)`: under three claims scales down. No README: 0 with a note. |
+| `runs` | 15 | It starts: 5. Plus 10 × the best of endpoints OK/endpoints tried (api, web) and the test pass rate. No tests and no endpoints: 3. |
+| `compiles` | 10 | Builds: 7, plus 3 for zero warnings. `compileall` (syntax only) or no build system: 5 with a note. |
+| `quality` | 15 | `max × clamp(0.7 + k × (0.06 × good − 0.25 × major − 0.015 × minor), 0, 1)` |
+| `architecture` | 10 | same as quality |
+| `tests` | 10 | Test files present: 4. Plus 6 × pass rate. |
+| `dead_code` | 5 | same as quality |
+| `security` | 5 | same, with 0.30 per major |
+| `docs` | 5 | same as quality |
 
-Findings with `valid: false` are excluded. Sampled chunks scale `quality`, `architecture`, `dead_code` by covered bytes / total bytes and the report says "sampled 24 of 61 chunks".
+- No findings either way is 70% of the dimension, not full marks.
+- `k = 1 / max(1, exploredChunks / 4)`, so penalties and bonuses are per four explored chunks and a big repo is not punished for having more code to find things in.
+- Findings with `valid: false` are excluded. Explorers that finished without output count as no evidence: those dimensions score 0 with "explorers returned nothing".
+- Sampled chunks scale quality, architecture and dead_code by covered bytes over total bytes. Chunks the planner skipped (vendored code, docs, fixtures) are left out of both.
+- Toolchains not in the image (Go, Rust, Java and others): compiles and runs take the repo's average ratio on claims and the finding dimensions, with a note.
 
 ## Run state (`GET /runs/:id`)
 ```json

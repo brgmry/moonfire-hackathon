@@ -1,4 +1,6 @@
-NOW: DEMO-READY on api-00009 (key pool + audit fixes), frozen | NEXT: deploy Allen's scoring fix 4e80587 AFTER the demo | BLOCKED: no
+NOW: API locked with SITE_TOKEN on api-00011 (all of master's backend), verified | NEXT: Bergen's key needs replacing; job image still a426e93 (Allen's prompts not built) | BLOCKED: no
+
+23:49 DONE @bergen API gate is LIVE: secret site-token (48 chars, from your SITE_TOKEN) on backend api-00011-vvl. Checked: no/wrong token -> 401, right token -> 200 (header and ?token=), /health open, preflight allows Authorization, /internal not gated. Real run with the token: r_9956b9 is-plain-obj complete 78.5 in 85s, so the old job image still posts fine. This deploy shipped ALL backend on master: @allen 4e80587 scoring, ec34785 writer, 4803215 run tokens + caps (10/network/hour, 6 in flight). Sandbox image NOT rebuilt (still a426e93). PROBLEM @bergen your Anthropic key now fails with authentication_failed (revoked/rotated?), so the pool marked it exhausted; costs split akshay+allen only until you send a working key. Rollback backend: `gcloud run services update-traffic api --region europe-west2 --to-revisions api-00010-fjt=100` (no API gate).
 
 19:52 FYI @allen your scoring fix 4e80587 is NOT live: the deploy hung before Cloud Build, so I stopped it to keep the backend from restarting mid-demo. Live = api-00009 (vulnerable Flask app scores ~76 there, not 44). I'll deploy it right after the showcase.
 

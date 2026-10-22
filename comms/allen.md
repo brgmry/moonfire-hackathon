@@ -1,5 +1,33 @@
-NOW: deploy hang diagnosed + fixed in repo, standing by | NEXT: your call on deploying before or after the showcase | BLOCKED: no
+NOW: handoff to @akshay below, all code pushed and tested | NEXT: standby for the showcase, then verify your deploy | BLOCKED: no
 
+20:03 HANDOFF @akshay: everything from me in one place. Nothing here needs touching before the showcase. Do it right after.
+   LIVE NOW: backend api-00009-lhp (f25888a + 2836f6b + key pool), job image a426e93e (a05555a).
+   WAITING TO DEPLOY (all on master, tested):
+     backend: 4e80587 evidence-based scoring (vulnerable Flask app ~44, itsdangerous ~85, slugify ~80) | ec34785 writer treats repo text as data | 4803215 per-run sandbox tokens + run caps (10 per network per hour, 6 in flight) | 268a504 backend/.gcloudignore (likely cause of the 19:52 hang: 120MB of node_modules uploaded every deploy)
+     job image: ec34785 impartial planner/explorer prompts (no repo name to the planner, focus spans dimensions, src/ can't be skipped by a README) | 4803215 events.py posts with RUN_TOKEN | 268a504 root .gcloudignore drops backend/, packages/ and .env from the build context
+   ORDER: either. They're compatible both ways: an old image without RUN_TOKEN falls back to INTERNAL_TOKEN, and the new backend accepts both.
+   STEPS:
+     1) git pull (master at or after 31856a7)
+     2) check for backend/.env on your machine: if there is one, previous deploys uploaded it to the Cloud Build bucket, so rotate that key tonight
+     3) infra/deploy.sh, ideally with `--memory 2Gi` added (the service is on the 512MiB default and keeps every run in RAM). The upload should now be ~1MB
+     4) infra/k2.sh for the job image
+   VERIFY (~3 min, ~75p):
+     a) curl $API/health -> ok   (new route, /healthz is Google's)
+     b) cd backend && npm i && E2E_API_URL=https://api-1047822996598.europe-west2.run.app npm run e2e:real -> 4 pass + 1 skip (real run, spend on pool, memory replay, missing repo refused)
+     c) optional: POST /runs {repoUrl: we45/Vulnerable-Flask-App, fresh: true} and the same for pallets/itsdangerous -> roughly 44 vs 85
+   ROLLBACK: backend `gcloud run services update-traffic api --region europe-west2 --to-revisions api-00009-lhp=100` | job: your a426e93e digest via `gcloud run jobs update tester --image ...@sha256:a426e93e...`
+   AFTER TONIGHT (security, by risk):
+     1) repo code runs as ROOT and can read /proc/1/environ (the keys the container started with). Fix: a non-root user in the image, ClaudeAgentOptions(user=...) in k3common (the SDK supports it) and the same user for repo subprocesses
+     2) once both deploys are out, remove the INTERNAL_TOKEN secret from the job (it only needs RUN_TOKEN)
+     3) spend limit per key in the Anthropic console, rotate all three keys
+     4) sandbox egress is open (VPC egress rule is the production path)
+   AFTER TONIGHT (your agents, from the audit):
+     - job 8Gi (the filesystem lives in RAM)
+     - start the runner after compile.done (both write .next/)
+     - case-insensitive README lookup in k3common
+     - compiler/runner send ~160k uncached input tokens each (~40p per run each): pipe long output through tail
+     - GITHUB_TOKEN secret (60 requests per hour unauthenticated)
+     - Go/Rust in the image if we keep going
 19:54 FYI @akshay your 19:52 deploy hang is very likely the upload. `--source ./backend` reads backend/.gcloudignore, and there wasn't one, so every deploy pushed 120MB of node_modules over the venue wifi. It would also have pushed backend/.env if your machine has one: check, and if it does, rotate that key after tonight. Fixed in 8 lines: backend/.gcloudignore, and the root .gcloudignore now drops backend/, packages/ and every .env. I built the backend image from master with docker locally: it boots, /health ok, a pasted link gets normalized, a mock run completes under the new scorer, no .env in the image. The next deploy should upload ~1MB and go through. Before or after the showcase is your call; your api-00009-lhp rollback still covers it.
 19:52 NEED @akshay one more redeploy of the backend and the job image from master (ec34785 + the security commit after it). In either order, both stay compatible. It brings:
    - evidence-based scoring: the vulnerable app goes to ~44, itsdangerous ~85;

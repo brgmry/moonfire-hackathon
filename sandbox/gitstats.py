@@ -93,6 +93,40 @@ def _parse_blame(text: str) -> dict:
     return counts
 
 
+def blame_line(repo: str, file: str, line: int) -> dict:
+    """Finding fields author/authorEmail/commit/authoredAt for file:line, {} when unknown.
+
+    Sync on purpose (one short git call); callers in async code wrap it in asyncio.to_thread.
+    Boundary lines of the shallow clone are skipped: their author is not who wrote the line.
+    """
+    try:
+        line = int(line)
+        if not file or line < 1:
+            return {}
+        out = subprocess.run(["git", "blame", "-L", f"{line},{line}", "--porcelain", "--", file],
+                             cwd=repo, capture_output=True, text=True, timeout=BLAME_TIMEOUT).stdout
+    except Exception:
+        return {}
+    rows = out.splitlines()
+    if not rows or "boundary" in rows:
+        return {}
+    info = {"commit": rows[0].split(" ")[0][:12]}
+    for r in rows:
+        if r.startswith("author "):
+            info["author"] = r[7:]
+        elif r.startswith("author-mail "):
+            info["authorEmail"] = r[12:].strip().strip("<>").strip()
+        elif r.startswith("author-time "):
+            try:
+                info["authoredAt"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(r[12:])))
+            except ValueError:
+                pass
+    if not info.get("author") or info.get("authorEmail") == "not.committed.yet" \
+            or _is_bot(info["author"], info.get("authorEmail", "")):
+        return {}
+    return info
+
+
 async def _truncated(cwd: str) -> bool:
     try:
         depth = int(os.environ.get("CLONE_DEPTH", "50") or 50)

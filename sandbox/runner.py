@@ -17,6 +17,15 @@ WEB_MARKERS = ("next", "vite", "nuxt", "svelte", "astro", "gatsby", "remix", "re
 API_MARKERS = ("express", "fastify", "koa", "hono", "@nestjs/core", "fastapi", "flask", "django",
                "uvicorn", "starlette", "gin-gonic", "labstack/echo", "actix-web", "axum")
 NO_TEST = "no test specified"
+README_API = re.compile(r"^\s*(?:GET|POST|PUT|PATCH|DELETE)\s+/\S*"
+                        r"|curl\s+(?:-\S+\s+)*['\"]?https?://(?:localhost|127\.0\.0\.1)", re.M)
+
+
+def _readme(wd: Path) -> str:
+    for name in ("README.md", "readme.md", "README.rst", "README"):
+        if (wd / name).is_file():
+            return _read(wd / name)
+    return ""
 
 
 def _read(p: Path) -> str:
@@ -37,6 +46,8 @@ def guess_kind(profile: dict, workdir: str) -> str:
     manifests = " ".join(_read(wd / f) for f in ("pyproject.toml", "requirements.txt", "go.mod",
                                                  "Cargo.toml")).lower()
     if any(m in fw for m in API_MARKERS) or any(m in deps.split() or m in manifests for m in API_MARKERS):
+        return "api"
+    if README_API.search(_readme(wd)):  # README documents HTTP routes (json-server: "GET /posts")
         return "api"
     if pkg.get("bin") or "[project.scripts]" in manifests or "[[bin]]" in manifests \
             or (wd / "src" / "main.rs").exists() or (wd / "main.go").exists():

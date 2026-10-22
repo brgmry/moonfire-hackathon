@@ -1,9 +1,11 @@
 """Explorer: one Haiku agent per chunk, read-only tools, findings out as finding.added."""
+import asyncio
 import os
 import re
 import uuid
 
 import events
+import gitstats
 import llm
 
 MODEL = "claude-haiku-5-5"
@@ -84,6 +86,7 @@ async def run(agent_id: str, chunk: dict, repo: str, do_not: list[str]) -> list[
         found_at = locate(repo, f["file"], f["quote"])
         if found_at:
             f["line"] = found_at
+            f.update(await asyncio.to_thread(gitstats.blame_line, repo, f["file"], found_at))
         events.emit("finding.added", finding=f)
         if found_at is None and os.path.isfile(os.path.join(repo, f["file"])):
             f["valid"] = False

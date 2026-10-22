@@ -1,0 +1,9 @@
+{
+  "name": "readme-vs-reality",
+  "private": true,
+  "workspaces": ["packages/*", "frontend"],
+  "scripts": {
+    "dev": "npm run dev -w frontend",
+    "fixture": "npm run fixture -w frontend"
+  }
+}

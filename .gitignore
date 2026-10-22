@@ -1,6 +1,27 @@
+# secrets
 .env
-spike/data/
+.env.*
+!.env.example
+
+# dependencies and builds
 node_modules/
-backend/data/
-sandbox/.venv/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# python
 __pycache__/
+*.pyc
+.venv/
+sandbox/.venv/
+
+# runtime data
+backend/data/
+spike/data/
+
+# os and editors
+.DS_Store
+*.log

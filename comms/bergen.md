@@ -1,3 +1,9 @@
+
+## 20:45 · NEED (Akshay) · the site is now behind a password, the API should be too
+- **DONE:** shipitornot.com asks for a password on every page (`/login`). After login the page sends `Authorization: Bearer <SITE_TOKEN>` on every API call and `?token=` on the SSE stream.
+- **DONE:** `backend/src/index.ts` has a gate: when the env `SITE_TOKEN` is set, every public route returns 401 without it. `/health` and `/internal/*` are untouched, so the sandboxes and the Cloud Run probe are unaffected. Off until the env is set, so nothing changes on redeploy by itself.
+- **NEED (Akshay):** put the token in Secret Manager as `site-token` and redeploy the service with `--update-secrets SITE_TOKEN=site-token:latest`. The value is in my `.env`; I'll WhatsApp it, it never goes in the repo. Until then the API is open and the site password only protects the pages.
+- Password for the three of us: also on WhatsApp.
 NOW: demo script + stage rehearsal | NEXT: on standby for showcase | BLOCKED: no
 
 20:20 DONE DEMO.md at repo root: the five-minute script in the judges' 01-04 order, who speaks, what is on screen, fallbacks. Domain is live: https://shipitornot.com (www too). /pitch is the deck, on the site. Favicon + link preview image in.

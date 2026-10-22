@@ -115,7 +115,7 @@ export function apply(s: RunState, e: RunEvent): RunState {
     case 'presence.join': return { ...n, presence: n.presence.includes(e.name) ? n.presence : [...n.presence, e.name] };
     case 'presence.leave': return { ...n, presence: n.presence.filter(p => p !== e.name) };
     case 'sandbox.started': return { ...n, runner: e.runner };
-    case 'repo.profile': { const { type, seq, ts, runId, ...profile } = e; void type; void seq; void ts; void runId; return { ...n, profile: profile as RepoProfile }; }
+    case 'repo.profile': { const { type, seq, ts, runId, ...flat } = e as RunEvent & { profile?: RepoProfile }; void type; void seq; void ts; void runId; const p = (flat as { profile?: RepoProfile }).profile ?? (flat as unknown as RepoProfile); return { ...n, profile: { ...p, languages: p.languages ?? {}, files: p.files ?? [] } }; }
     case 'install.done': return { ...n, install: { ok: e.ok, manager: e.manager, durationMs: e.durationMs, errorsTail: e.errorsTail } };
     case 'chunk.created': return { ...n, chunks: [...n.chunks.filter(c => c.id !== e.chunk.id), e.chunk] };
     case 'agent.spawned': return { ...n, agents: { ...n.agents, [e.agentId]: { agentId: e.agentId, role: e.role, chunkId: e.chunkId, model: e.model, status: 'working', spawnedAt: e.ts, lastActiveAt: e.ts } } };
@@ -138,14 +138,14 @@ export function apply(s: RunState, e: RunEvent): RunState {
     }
     case 'finding.dropped': return { ...n, findings: n.findings.map(f => f.id === e.findingId ? { ...f, valid: false } : f) };
     case 'claim.added': return { ...n, claims: [...n.claims.filter(c => c.id !== e.claim.id), e.claim] };
-    case 'compile.done': { const { type, seq, ts, runId, ...r } = e; void type; void seq; void ts; void runId; return { ...n, compile: r as CompileResult }; }
-    case 'run.done': { const { type, seq, ts, runId, ...r } = e; void type; void seq; void ts; void runId; return { ...n, run: r as RunResult }; }
+    case 'compile.done': { const { type, seq, ts, runId, ...r } = e as RunEvent & { result?: CompileResult }; void type; void seq; void ts; void runId; return { ...n, compile: ((r as { result?: CompileResult }).result ?? (r as unknown as CompileResult)) }; }
+    case 'run.done': { const { type, seq, ts, runId, ...r } = e as RunEvent & { result?: RunResult }; void type; void seq; void ts; void runId; return { ...n, run: ((r as { result?: RunResult }).result ?? (r as unknown as RunResult)) }; }
     case 'app.screenshot': return { ...n, screenshotUrl: e.url };
-    case 'contributors': return { ...n, contributors: { authors: e.authors, truncated: e.truncated, fork: e.fork } };
+    case 'contributors': { const c = (e as RunEvent & { contributors?: Contributors }).contributors ?? { authors: e.authors ?? [], truncated: !!e.truncated, fork: !!e.fork }; return { ...n, contributors: c }; }
     case 'score.updated': {
       const dimensions = { ...n.score.dimensions, [e.dimension]: { points: e.points, max: e.max, top: e.top } };
       const total = Object.values(dimensions).reduce((acc, d) => acc + (d?.points ?? 0), 0);
-      return { ...n, score: { total: Math.round(total), dimensions } };
+      return { ...n, score: { total: Math.round(total * 10) / 10, dimensions } };
     }
     case 'report.ready': return { ...n, report: e.markdown, score: { total: e.score, dimensions: e.dimensions }, tokens: e.tokens };
     case 'memory.hit': return { ...n, memoryHits: [...n.memoryHits, e.chunkId] };

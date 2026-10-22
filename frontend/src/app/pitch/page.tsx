@@ -155,6 +155,13 @@ export default function Pitch() {
             </div>
           </div>
         </Window>
+        <Window title="The team" className="p6" tip="built in one evening at Moonfire Build Night, 22 Oct 2026">
+          <div className="team">
+            <div data-tip="frontend, the Mac world, contract, benchmark, pitch"><Sprite role="orchestrator" frame="idle" scale={2.5} /><b>Bergen Merey</b><span>YC founder</span></div>
+            <div data-tip="backend, orchestrator, planner, explorers, claims, classifier, scoring"><Sprite role="explorer" frame="idle" scale={3} /><b>Allen Bridi</b><span>MSc Computer Science, UCL · founder of 3 startups</span></div>
+            <div data-tip="Google Cloud, sandbox image and jobs, compile, run and git agents"><Sprite role="compiler" frame="idle" scale={3} /><b>Akshay Gujjula</b><span>2nd-year Computer Science, UCL · CTO, Vasmio</span></div>
+          </div>
+        </Window>
       </div>
     </div>
   );

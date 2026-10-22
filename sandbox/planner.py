@@ -113,6 +113,17 @@ def _split(name: str, fs: list[str], sizes: dict) -> list[tuple[str, list[str]]]
     return [(f"{name} #{i + 1}", p) for i, p in enumerate(pieces)]
 
 
+SKIPPABLE_DIRS = re.compile(r"(^|/)(vendor|vendored|third[_-]?party|external|extern|deps|generated|gen|fixtures?|testdata|"
+                            r"examples?|samples?|demo|docs?|site|website|assets|static/(lib|vendor)|public/(lib|vendor))(/|$)", re.I)
+CODE_EXT = re.compile(r"\.(py|ts|tsx|js|jsx|mjs|cjs|go|rs|java|kt|rb|php|c|cc|cpp|h|hpp|cs|swift|scala|ex|exs|dart|lua|zig|vue|svelte|sh)$", re.I)
+
+
+def skippable(path: str) -> bool:
+    """The planner may skip non-code, or code under vendored, generated, fixture, docs or example dirs.
+    Anything else stays reviewable, so a README cannot talk the crew out of reading the code."""
+    return not CODE_EXT.search(path) or bool(SKIPPABLE_DIRS.search(path)) or ".min." in path
+
+
 def build_chunks(plan: dict, files: list[str], sizes: dict, churn: Counter, max_chunks: int,
                  common_dir, slug) -> list[dict]:
     """Turn the model's plan into a partition of `files` that respects the caps."""
@@ -126,7 +137,7 @@ def build_chunks(plan: dict, files: list[str], sizes: dict, churn: Counter, max_
         i = _owner(p, entries)
         if i is not None:
             groups[i].append(p)
-        elif any(p == s or p.startswith(s + "/") for s in skip):
+        elif any(p == s or p.startswith(s + "/") for s in skip) and skippable(p):
             skipped[p.split("/", 1)[0] if "/" in p else "."].append(p)
         else:
             leftovers[p.split("/", 1)[0] if "/" in p else "."].append(p)
@@ -169,7 +180,7 @@ async def plan(repo: str, profile: dict, files: list[str], sizes: dict, churn: C
     """Ask the model for a plan. Returns the validated plan dict, or None to fall back to rules."""
     user = (
         "Repository profile:\n"
-        + json.dumps({k: profile.get(k) for k in ("name", "languages", "packageManager", "framework", "hasTests",
+        + json.dumps({k: profile.get(k) for k in ("languages", "packageManager", "framework", "hasTests",
                                                   "hasBuild", "hasDockerfile", "fileCount")})
         + f"\n\nInstall command the sandbox will run by default: {default_install or '(none, no package manager found)'}"
         + "\n\nReviewable files (path, size, commits touching it in the last year):\n"

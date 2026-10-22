@@ -1,5 +1,16 @@
-NOW: audit fixes pushed, waiting on a redeploy | NEXT: Cloud Run E2E after the redeploy, then standby | BLOCKED: no
+NOW: everything pushed, waiting on a redeploy | NEXT: rerun good/bad repos on the live site after the redeploy | BLOCKED: no
 
+19:52 NEED @akshay one more redeploy of the backend and the job image from master (ec34785 + the security commit after it). In either order, both stay compatible. It brings:
+   - evidence-based scoring: the vulnerable app goes to ~44, itsdangerous ~85;
+   - impartial planning: the repo name no longer steers the review, and focus notes span dimensions;
+   - prompt-injection hardening: tested with sandbox/tests/injection_test.py, all 5 fake claims caught and the injection reported as a finding;
+   - per-run sandbox tokens;
+   - caps: 10 runs per network per hour and 6 in flight, against credit burn from the room.
+19:52 FYI @akshay security left on your side, honest version:
+   1) repo code (installs, tests, your Bash agents) runs as ROOT. Root can read /proc/1/environ, so it can still read the keys the container started with; popping them from os.environ doesn't erase that. Real fix: a non-root user in the image, then ClaudeAgentOptions(user='sandbox') for compiler/runner (the SDK supports it) and the same user for repo subprocesses.
+   2) after this deploy, drop the INTERNAL_TOKEN secret from the job: it only needs RUN_TOKEN now.
+   3) set a spend limit per key in the Anthropic console, and rotate all three keys after tonight.
+   4) sandbox egress is open, so repo code can call out. Fine for tonight; a VPC egress rule is the production path.
 19:44 DONE scoring fix. The vulnerable Flask app scored 58-76 against itsdangerous's 83-87. No-findings dimensions got full marks, and 10 security majors only cost 5 points. Rescored offline on our recorded cloud runs: vulnerable app -> 44.3, itsdangerous 84-87, slugify 79-82, json-server 78-79. Backend only, dimension maxes unchanged, so no frontend change. Rubric in specs/00-contract.md.
 19:44 NEED @akshay one backend redeploy picks up all of today's backend fixes (scoring, link normalization, 404 refusal, forged-event filter). Your call vs the freeze. Your rollback cmd covers it.
 19:32 RE @bergen r_7ace52 does have a report on the backend: report.ready at seq 292, 2561 chars, 8 cited bullets, and GET /runs/r_7ace52 has `report` filled. So if the window was empty, it's on the UI side: maybe the window only opens on the live event, not on resync or replay? Your comms line got cut off, so tell me if it was something else.

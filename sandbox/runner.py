@@ -67,7 +67,9 @@ def guess_test(profile: dict, workdir: str) -> str | None:
         or any(wd.glob("*/test_*.py")) or (profile.get("hasTests") and any(wd.glob("**/*.py")))
     if py_tests:
         venv = wd / ".venv" / "bin" / "python"
-        return f"{venv if venv.exists() else 'python'} -m pytest -q"
+        if venv.exists():  # orchestrator installs repo deps into .venv, which usually lacks pytest
+            return f"({venv} -m pytest --version >/dev/null 2>&1 || uv pip install -q -p .venv pytest) && {venv} -m pytest -q"
+        return "python -m pytest -q"
     return None
 
 

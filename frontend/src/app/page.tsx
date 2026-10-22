@@ -29,7 +29,10 @@ export default function Home() {
           <form onSubmit={go}>
             <label htmlFor="repo" className="empty">every README is a pitch deck. we read the code, build it, run it, score it.</label>
             <input id="repo" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://github.com/owner/repo" autoComplete="off" />
-            <button type="submit" disabled={busy}>{busy ? "cloning…" : "go"}</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="submit" disabled={busy}>{busy ? "cloning…" : "go"}</button>
+              <button type="button" onClick={() => router.push("/run/demo")}>run the demo</button>
+            </div>
             {err && <div className="err">{err}</div>}
           </form>
         </Window>

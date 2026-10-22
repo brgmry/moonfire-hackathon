@@ -93,7 +93,7 @@ button{font-family:inherit}
 .report p{margin:0 0 8px;line-height:1.5;max-width:65ch}
 .report .tok{font-family:var(--display);font-size:10px;border-top:1.5px solid var(--ink);padding-top:6px;margin-top:6px}
 .empty{color:#777;font-size:11px}
-.home{grid-area:mac;max-width:520px;margin:0 auto;width:100%}
+.home{max-width:520px;width:100%}
 .home form{display:grid;gap:8px}
 .home input{font-family:var(--mono);font-size:13px;border:2px solid var(--ink);padding:6px 8px;background:#fff;width:100%}
 .home .err{color:var(--bad);font-size:11px}

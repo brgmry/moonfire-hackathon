@@ -13,7 +13,7 @@ export function ScoreWindow({ state, sel, onSelect }: { state: RunState; sel: Di
           <circle cx="46" cy="46" r={R} fill="none" stroke="#fff" strokeWidth="9" strokeDasharray={`${arc} ${C}`} transform="rotate(135 46 46)" />
           <circle cx="46" cy="46" r={R} fill="none" stroke="#141414" strokeWidth="9" strokeDasharray={`${arc * total / 100} ${C}`} transform="rotate(135 46 46)" style={{ transition: "stroke-dasharray .4s" }} />
         </svg>
-        <div className="total"><span>{total}</span><small>OUT OF 100</small></div>
+        <div className="total"><span>{Math.round(total)}</span><small>OUT OF 100</small></div>
       </div>
       <div className="rows">
         {DIMENSIONS.map(({ key, max, label }) => {
@@ -23,7 +23,7 @@ export function ScoreWindow({ state, sel, onSelect }: { state: RunState; sel: Di
             <button type="button" key={key} className={`row ${sel === key ? "sel" : ""}`} onClick={() => onSelect(sel === key ? null : key)}>
               <span>{label}</span>
               <span className="bar"><i style={{ width: `${(100 * pts) / max}%` }} /></span>
-              <span className="n">{pts}/{max}</span>
+              <span className="n">{Math.round(pts * 10) / 10}/{max}</span>
             </button>
           );
         })}

@@ -13,6 +13,22 @@ export function useRun(id: string) {
   useEffect(() => {
     let closed = false;
     let backoff = 500;
+    if (id === "demo") {
+      // Demo mode: replay the fixture in the browser, timed by its timestamps. Works with no backend at all.
+      const timers: ReturnType<typeof setTimeout>[] = [];
+      fetch("/fixtures/run.jsonl").then((r) => r.text()).then((txt) => {
+        if (closed) return;
+        const rows = txt.trim().split("\n").map((l) => JSON.parse(l) as RunEvent & { ts: string });
+        const t0 = Date.parse(rows[0].ts);
+        setConnected(true);
+        rows.forEach((row, i) => {
+          timers.push(setTimeout(() => {
+            setState((s) => apply(s, { ...row, seq: i + 1, runId: "demo", ts: new Date().toISOString() }));
+          }, Date.parse(row.ts) - t0));
+        });
+      }).catch(() => setConnected(false));
+      return () => { closed = true; timers.forEach(clearTimeout); };
+    }
     const resync = async () => {
       try {
         const r = await fetch(`${API}/runs/${id}`);

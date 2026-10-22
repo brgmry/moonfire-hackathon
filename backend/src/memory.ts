@@ -9,12 +9,24 @@ type Memory = {
 };
 
 // Recipes are only what installed cleanly before; the orchestrator has its own defaults per manager.
+// Defaults an earlier build wrote into memory.json as if they had been learned; they override better ones.
+const STALE_RECIPES = new Set([
+  "corepack enable && pnpm i --frozen-lockfile=false",
+  "corepack enable && yarn install",
+  "npm ci || npm i",
+  "uv sync",
+  "pip install poetry && poetry install",
+  "pip install -r requirements.txt",
+  "cargo fetch",
+  "go mod download",
+]);
+
 let mem: Memory = { runsByRepoCommit: {}, recipes: {}, doNot: [] };
 let saveTimer: NodeJS.Timeout | undefined;
 
 export async function loadMemory() {
   const m = await readJson("memory.json");
-  if (m) mem = { runsByRepoCommit: m.runsByRepoCommit ?? {}, recipes: { ...m.recipes }, doNot: m.doNot ?? [] };
+  if (m) mem = { runsByRepoCommit: m.runsByRepoCommit ?? {}, recipes: Object.fromEntries(Object.entries((m.recipes ?? {}) as Record<string, string>).filter(([, v]) => !STALE_RECIPES.has(String(v)))), doNot: m.doNot ?? [] };
 }
 
 function save() {

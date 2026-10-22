@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # The claude-agent-sdk wheel bundles the claude CLI, so no npm install of it.
 COPY sandbox/requirements.txt /app/sandbox/requirements.txt
-RUN corepack enable && npm i -g pnpm@9 yarn \
+RUN npm i -g pnpm@9 yarn \
  && pip install --no-cache-dir uv pytest -r /app/sandbox/requirements.txt
 
 # bypassPermissions refuses to run as root unless the CLI knows it is sandboxed.

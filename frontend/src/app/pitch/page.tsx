@@ -29,6 +29,32 @@ export default function Pitch() {
     <div className="desk">
       <MenuBar menus={menus} title="README vs Reality" />
       <div className="pitch">
+        <Window title="Why · not just another agent" className="p5" tip="three reasons, hover for the argument">
+          <div className="why">
+            <div data-tip="one rubric, computed by code from findings. Same 100 for every repo, so a portfolio or a pipeline ranks on the same scale. An agent gives a different essay every time.">
+              <div className="fig ruler">
+                <div className="r"><span>repo A</span><i style={{ width: "80%" }} /></div>
+                <div className="r"><span>repo B</span><i style={{ width: "52%" }} /></div>
+                <div className="r"><span>repo C</span><i style={{ width: "67%" }} /></div>
+              </div>
+              <div className="h">comparable</div>
+              <div className="l">one rubric, every repo, same scale</div>
+            </div>
+            <div data-tip="it clones, builds and runs the code in a sandbox; every finding is a file, a line and a verbatim quote; a validator drops files that do not exist and a second model drops findings the quote does not support. Rerun it and get the same number.">
+              <div className="fig receipt2">
+                <span className="loc">src/api/auth.ts:42</span>
+                <span className="tick">✓</span>
+              </div>
+              <div className="h">verifiable</div>
+              <div className="l">ran it, quoted it, rerunnable</div>
+            </div>
+            <div data-tip="every run writes memory: install recipes per ecosystem, classifier rejections, scores by repo and commit. The thousandth repo scores faster, cheaper, and against a percentile of everything scored before. An agent chat forgets.">
+              <div className="fig stairs" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+              <div className="h">compounds</div>
+              <div className="l">every run teaches the next</div>
+            </div>
+          </div>
+        </Window>
         <Window title="01 · The goal" className="p1" tip="the problem, and who benefits">
           <p className="huge">Every README<br />is a pitch deck.</p>
           <div className="vs">
@@ -126,32 +152,6 @@ export default function Pitch() {
               <div className="lid" data-tip="close the laptops, the service keeps the run">
                 <div className="lap" /><span>lid closed · still running</span>
               </div>
-            </div>
-          </div>
-        </Window>
-        <Window title="Why not just hand the repo to an agent?" className="p5" tip="three reasons, hover for the argument">
-          <div className="why">
-            <div data-tip="one rubric, computed by code from findings. Same 100 for every repo, so a portfolio or a pipeline ranks on the same scale. An agent gives a different essay every time.">
-              <div className="fig ruler">
-                <div className="r"><span>repo A</span><i style={{ width: "80%" }} /></div>
-                <div className="r"><span>repo B</span><i style={{ width: "52%" }} /></div>
-                <div className="r"><span>repo C</span><i style={{ width: "67%" }} /></div>
-              </div>
-              <div className="h">comparable</div>
-              <div className="l">one rubric, every repo, same scale</div>
-            </div>
-            <div data-tip="it clones, builds and runs the code in a sandbox; every finding is a file, a line and a verbatim quote; a validator drops files that do not exist and a second model drops findings the quote does not support. Rerun it and get the same number.">
-              <div className="fig receipt2">
-                <span className="loc">src/api/auth.ts:42</span>
-                <span className="tick">✓</span>
-              </div>
-              <div className="h">verifiable</div>
-              <div className="l">ran it, quoted it, rerunnable</div>
-            </div>
-            <div data-tip="every run writes memory: install recipes per ecosystem, classifier rejections, scores by repo and commit. The thousandth repo scores faster, cheaper, and against a percentile of everything scored before. An agent chat forgets.">
-              <div className="fig stairs" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-              <div className="h">compounds</div>
-              <div className="l">every run teaches the next</div>
             </div>
           </div>
         </Window>

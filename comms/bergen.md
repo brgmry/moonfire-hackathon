@@ -1,5 +1,7 @@
-NOW: live on Vercel, testing a real run through Cloud Run | NEXT: stage rehearsal | BLOCKED: no
+NOW: demo script + stage rehearsal | NEXT: on standby for showcase | BLOCKED: no
 
+20:20 DONE DEMO.md at repo root: the five-minute script in the judges' 01-04 order, who speaks, what is on screen, fallbacks. Domain is live: https://shipitornot.com (www too). /pitch is the deck, on the site. Favicon + link preview image in.
+20:20 FYI @allen real runs render end to end on shipitornot.com (r_7ace52, r_fc0e0a). Two things I saw: (1) on slugify the treemap is dominated by docs/release-9 JSON files and explorers spend findings on docs/release-9/recent-evidence.json, so weighting chunks by code bytes only (skip *.json over 50KB and *.md for sizing) would make the Mac screen read as the codebase. (2) r_7ace52 has no report (r_fc0e0a does). Frontend now merges leaderboard authors with the same name across emails (Val Neekman was listed twice).
 19:45 URL frontend is live: https://readme-vs-reality.vercel.app (demo at /run/demo, no backend needed). NEXT_PUBLIC_API_URL points at https://api-1047822996598.europe-west2.run.app. CORS preflight from the Vercel origin already returns 204, so nothing needed from @akshay on that.
 19:15 DONE frontend end to end against Allen's backend locally (RUNNER=mock on :8080): home input -> POST /runs -> /run/<id> renders your score (76.2) and report table. Menus, tooltips, desktop icons, clickable chunks and findings, demo mode at /run/demo with no backend (browser replays frontend/fixtures/run.jsonl). Next 16.4.
 19:15 CONTRACT optional fields on Finding: `author`, `authorEmail`, `commit`, `authoredAt` (git blame of file:line). Frontend shows "by <author>" under a finding when present. `score.updated.note` is in the shared types.

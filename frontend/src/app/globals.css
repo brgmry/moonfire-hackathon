@@ -1,0 +1,104 @@
+/* A 1984 Mac desktop. One compact Macintosh in the centre whose screen is the sandbox world; windows around it. */
+:root{
+  --sky1:#8fbfe8; --sky2:#d9e9f7; --paper:#f4f1ec; --ink:#141414; --bezel:#2a2724; --beige:#e4d9c3; --beige2:#c9bca1;
+  --phosphor:#c9f2c0; --screen:#0b0d0b; --grid:#162016; --note:#f5e27a; --good:#2f8f46; --bad:#c3332e; --warn:#d08a1c;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(var(--sky1),var(--sky2));color:var(--ink);font-family:var(--mono);font-size:13px;overflow-x:hidden}
+button{font-family:inherit}
+.desk{position:relative;min-height:100%;padding:0 max(16px,env(safe-area-inset-left,0px)) 24px max(16px,env(safe-area-inset-right,0px));
+  background:
+   radial-gradient(60% 40% at 15% 30%,rgba(255,255,255,.75),transparent 70%),
+   radial-gradient(50% 30% at 70% 20%,rgba(255,255,255,.7),transparent 70%),
+   radial-gradient(70% 35% at 55% 75%,rgba(255,255,255,.6),transparent 70%)}
+.menubar{position:sticky;top:0;z-index:10;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 18px calc(-1*max(16px,env(safe-area-inset-right,0px)));background:var(--paper);border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:18px;padding:5px max(16px,env(safe-area-inset-left,0px));font-family:var(--display);font-size:12px;flex-wrap:wrap}
+.menubar .logo{width:14px;height:14px;background:var(--ink);display:inline-block}
+.menubar .sp{flex:1}
+.menubar a{color:inherit;text-decoration:none}
+.chip{border:1.5px solid var(--ink);padding:1px 6px;background:#fff;font-size:10px;font-family:var(--display)}
+.chip.on{background:var(--ink);color:#fff}
+.grid{display:grid;grid-template-columns:1fr minmax(300px,520px) 1fr;grid-template-areas:"note mac score" "evidence mac board" "report report report";gap:16px;align-items:start;max-width:1280px;margin:0 auto}
+.grid.stage{grid-template-columns:1fr minmax(300px,760px) 1fr;grid-template-areas:"note mac score" ". mac ." "report report report"}
+@media (max-width:900px){.grid,.grid.stage{grid-template-columns:1fr;grid-template-areas:"mac" "score" "note" "evidence" "board" "report"}}
+.win{background:var(--paper);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);min-width:0}
+.win .tb{display:flex;align-items:center;gap:8px;padding:3px 6px;border-bottom:2px solid var(--ink);font-family:var(--display);font-size:11px;
+  background:repeating-linear-gradient(to bottom,var(--ink) 0 1px,var(--paper) 1px 3px)}
+.win .tb span{background:var(--paper);padding:0 6px}
+.win .tb .box{width:10px;height:10px;border:1.5px solid var(--ink);background:var(--paper);margin-left:4px;padding:0}
+.win .body{padding:10px}
+.note{grid-area:note;background:var(--note);border:1px solid #b8a53a;box-shadow:3px 3px 0 rgba(0,0,0,.25);padding:10px 12px;transform:rotate(-1.5deg);font-size:12px;max-width:260px}
+.note b{font-family:var(--display);font-size:11px;display:block;margin-bottom:6px;border-bottom:1px solid #b8a53a;padding-bottom:4px}
+.note .url{font-size:10px;word-break:break-all;margin-top:4px}
+.note .qr{margin-top:8px;background:#fff;padding:4px;display:inline-block}
+.note button,.home button{margin-top:8px;font-family:var(--display);font-size:10px;border:1.5px solid var(--ink);background:#fff;padding:3px 8px;cursor:pointer}
+.note button:focus-visible,.home button:focus-visible,.home input:focus-visible{outline:2px solid var(--ink)}
+.macwrap{grid-area:mac;position:relative;width:100%;max-width:520px;margin:0 auto}
+.stage .macwrap{max-width:760px}
+.macwrap svg{width:100%;height:auto;display:block}
+.screen{position:absolute;left:14.6%;top:10.9%;width:70.8%;height:46.2%;background:var(--screen);overflow:hidden;color:var(--phosphor);font-size:10px;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:12px 12px}
+.screen.shot{background-size:cover;background-position:top center}
+.boot{position:absolute;inset:0;padding:8px;white-space:pre-wrap;line-height:1.4;font-family:var(--mono)}
+.boot .cur{display:inline-block;width:6px;height:10px;background:var(--phosphor);animation:bl 1s steps(1) infinite;vertical-align:-1px}
+@keyframes bl{50%{opacity:0}}
+.tile{position:absolute;border:1px solid rgba(201,242,192,.45);background:rgba(201,242,192,.06);overflow:hidden;font-size:8px;padding:2px 3px;color:rgba(201,242,192,.8);transition:background .4s;font-family:var(--mono)}
+.tile.hot{background:rgba(201,242,192,.22)}
+.tile.sampled{background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(201,242,192,.12) 4px 6px)}
+.tile.memory{border-style:dashed}
+.dock{position:absolute;left:0;right:0;bottom:0;height:22px;border-top:1px solid rgba(201,242,192,.3);background:rgba(0,0,0,.45);display:flex;gap:10px;padding:2px 6px;align-items:center;font-family:var(--mono);font-size:8px}
+.dock .lbl{opacity:.85;white-space:nowrap}
+.av{position:absolute;width:12px;height:14px;transition:left .6s cubic-bezier(.3,.7,.3,1),top .6s cubic-bezier(.3,.7,.3,1),opacity .4s;image-rendering:pixelated}
+.av .px{position:absolute;width:2px;height:2px;background:var(--acc,#fff)}
+.av .eye{position:absolute;width:2px;height:2px;background:#111}
+.av .hat{position:absolute;width:2px;height:2px;background:#fff}
+.av.done{opacity:.45}
+.av.found{animation:hop .5s 2}
+@keyframes hop{50%{transform:translateY(-4px)}}
+.dock .av{position:relative;transition:none;flex:none}
+.bub{position:absolute;background:#fff;color:var(--ink);border:1px solid var(--ink);padding:2px 4px;font-size:8px;max-width:48%;line-height:1.25;box-shadow:1px 1px 0 var(--ink);animation:fade 4s forwards;z-index:3;font-family:var(--mono)}
+.bub.major{border-color:var(--bad);box-shadow:1px 1px 0 var(--bad)}
+.bub.good{border-color:var(--good);box-shadow:1px 1px 0 var(--good)}
+.bub::after{content:"";position:absolute;left:4px;bottom:-4px;width:4px;height:4px;background:#fff;border-left:1px solid var(--ink);border-bottom:1px solid var(--ink);transform:rotate(-45deg)}
+@keyframes fade{0%,70%{opacity:1}100%{opacity:0}}
+.score{grid-area:score}
+.dial{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.dial svg{width:92px;height:92px;flex:none}
+.total{font-family:var(--display);font-size:34px;line-height:1}
+.total small{display:block;font-size:10px;margin-top:4px;letter-spacing:.08em}
+.rows{display:grid;gap:4px}
+.row{display:grid;grid-template-columns:92px 1fr 44px;gap:8px;align-items:center;font-size:11px;cursor:pointer;padding:1px 2px;border:0;background:none;text-align:left;width:100%;color:inherit}
+.row:hover,.row.sel{background:#fff}
+.row .bar{height:8px;border:1px solid var(--ink);background:#fff;position:relative}
+.row .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);transition:width .4s}
+.row .n{font-variant-numeric:tabular-nums;text-align:right}
+.evidence{grid-area:evidence}
+.tabs{display:flex;margin:-10px -10px 8px;border-bottom:2px solid var(--ink)}
+.tabs button{font-family:var(--display);font-size:10px;border:0;border-right:2px solid var(--ink);background:var(--paper);padding:4px 10px;cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff}
+.list{display:grid;gap:8px;max-height:260px;overflow:auto;min-width:0}
+.f{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:11px;min-width:0}
+.f.dropped{opacity:.5;text-decoration:line-through}
+.f .sw{width:12px;height:14px;margin-top:2px}
+.f .loc{font-weight:600}
+.f .q{background:#fff;border:1px solid var(--ink);padding:3px 5px;white-space:pre-wrap;word-break:break-word;margin:3px 0;font-size:10.5px}
+.sev{font-family:var(--display);font-size:9px;padding:0 4px;border:1px solid currentColor;margin-left:6px}
+.sev.major{color:var(--bad)} .sev.minor{color:var(--warn)} .sev.good{color:var(--good)} .sev.dropped{color:#777}
+.claim{display:grid;grid-template-columns:70px 1fr;gap:8px;font-size:11px}
+.claim .st{font-family:var(--display);font-size:9px;padding:1px 4px;border:1px solid var(--ink);text-align:center;align-self:start}
+.st.delivered{background:var(--good);color:#fff;border-color:var(--good)} .st.missing{background:var(--bad);color:#fff;border-color:var(--bad)} .st.partial{background:var(--warn);color:#fff;border-color:var(--warn)}
+.board{grid-area:board}
+.board table{width:100%;border-collapse:collapse;font-size:11px}
+.board th{font-family:var(--display);font-size:9px;text-align:left;border-bottom:1.5px solid var(--ink);padding:2px 4px}
+.board td{padding:3px 4px;border-bottom:1px dotted #999;font-variant-numeric:tabular-nums}
+.board td.n{text-align:right}
+.report{grid-area:report;max-width:760px;width:100%;margin:0 auto}
+.report p{margin:0 0 8px;line-height:1.5;max-width:65ch}
+.report .tok{font-family:var(--display);font-size:10px;border-top:1.5px solid var(--ink);padding-top:6px;margin-top:6px}
+.empty{color:#777;font-size:11px}
+.home{grid-area:mac;max-width:520px;margin:0 auto;width:100%}
+.home form{display:grid;gap:8px}
+.home input{font-family:var(--mono);font-size:13px;border:2px solid var(--ink);padding:6px 8px;background:#fff;width:100%}
+.home .err{color:var(--bad);font-size:11px}
+@media (prefers-reduced-motion:reduce){.av,.row .bar i{transition:none}.av.found,.boot .cur,.bub{animation:none}}

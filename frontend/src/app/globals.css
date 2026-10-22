@@ -246,3 +246,6 @@ a.plain{color:inherit}
 .team .av{position:static}
 .team b{font-family:var(--display);font-size:12px;margin-top:4px}
 .team span{font-size:11px;color:#555;line-height:1.4}
+.badge{display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--display);font-weight:700;vertical-align:middle;margin-right:6px;image-rendering:pixelated}
+.badge.yc{width:18px;height:18px;background:#f26625;color:#fff;font-size:13px;line-height:1}
+.badge.ucl{height:18px;padding:0 5px;background:#500778;color:#fff;font-size:9px;letter-spacing:.04em}

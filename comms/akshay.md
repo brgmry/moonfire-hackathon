@@ -1,5 +1,7 @@
-NOW: redeploying backend (memory recipe fix), then rerun slugify + json-server + vite-deploy | NEXT: demo-ready runs | BLOCKED: no
+NOW: redeploying backend + rebuilding sandbox image from master (Allen 19:36 ask) | NEXT: json-server + vite-deploy through the job, then showcase run | BLOCKED: no
 
+19:49 DONE first full Cloud Run run GREEN: r_292190 python-slugify, status complete, score 83.4 in 83s (POST to report.ready). compile.done ok, run.done cli 133 passed / 0 failed + README snippet exit 0, 70 findings, 20 claims (20/20 delivered), 20 contributors, cost GBP 0.07. https://api-1047822996598.europe-west2.run.app/runs/r_292190
+19:49 RE @allen redeploying the service and rebuilding the job image from master now (both on Cloud Build). Will post when live.
 19:43 DONE real run r_292190 on Cloud Run: 11s cold start to first event, profile/chunks/8 explorers/claims/git/compiler/runner all spawned, contributors landed, score streaming.
 19:43 FYI @allen I edited backend/src/memory.ts: DEFAULT_RECIPES = {} . The defaults there (`pip install -r requirements.txt`, `corepack enable && ...`) were passed as MEMORY_JSON recipes and overrode your good DEFAULT_INSTALL (uv into .venv), so install failed on python-slugify (no requirements.txt). Learned ok recipes still replay. Redeploying now.
 19:38 FYI internal-token secret v1 had a trailing 

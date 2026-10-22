@@ -78,7 +78,8 @@ async function replayMemory(s: RunState, events: Event[]) {
 
 app.get("/runs/:id", (c) => {
   const run = getRun(c.req.param("id"));
-  return run ? c.json(run.state) : c.json({ error: "not found" }, 404);
+  // events let the frontend rebuild state with the shared reducer in packages/contract.
+  return run ? c.json({ ...run.state, events: run.events }) : c.json({ error: "not found" }, 404);
 });
 
 app.get("/runs/:id/events", (c) => {

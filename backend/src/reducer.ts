@@ -29,6 +29,16 @@ function payload(e: Event): Record<string, any> {
   return rest;
 }
 
+// The sandbox sends these payloads flat (specs/00-contract.md); clients get them nested (packages/contract).
+const NESTED: Record<string, string> = { "repo.profile": "profile", "compile.done": "result", "run.done": "result", contributors: "contributors" };
+
+export function normalize(input: Record<string, any>): Record<string, any> {
+  const key = NESTED[input.type];
+  if (!key || input[key] !== undefined) return input;
+  const { type, ts, seq, runId, ...rest } = input;
+  return { type, ts, seq, runId, [key]: rest };
+}
+
 function agent(s: RunState, agentId: string): Agent | undefined {
   return s.agents.find((a) => a.agentId === agentId);
 }
@@ -54,7 +64,7 @@ export function apply(s: RunState, e: Event): RunState {
       s.runner = e.runner;
       break;
     case "repo.profile":
-      s.profile = payload(e);
+      s.profile = e.profile ?? payload(e);
       break;
     case "install.done":
       s.install = payload(e);
@@ -104,16 +114,16 @@ export function apply(s: RunState, e: Event): RunState {
       if (!s.claims.some((c) => c.id === e.claim.id)) s.claims.push(e.claim);
       break;
     case "compile.done":
-      s.compile = payload(e);
+      s.compile = e.result ?? payload(e);
       break;
     case "run.done":
-      s.run = payload(e);
+      s.run = e.result ?? payload(e);
       break;
     case "app.screenshot":
       s.screenshot = e.url;
       break;
     case "contributors":
-      s.contributors = payload(e);
+      s.contributors = e.contributors ?? payload(e);
       break;
     case "score.updated": {
       s.score.dimensions[e.dimension] = { points: e.points, max: e.max, top: e.top ?? [], note: e.note };

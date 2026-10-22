@@ -18,6 +18,8 @@ const BACKEND_TYPES = new Set([
 
 const CANDIDATES = [
   process.env.FIXTURE,
+  path.resolve("../packages/contract/fixtures/run.jsonl"),
+  path.resolve("packages/contract/fixtures/run.jsonl"),
   path.resolve("../frontend/fixtures/run.jsonl"),
   path.resolve("frontend/fixtures/run.jsonl"),
   path.resolve("fixtures/mini.jsonl"),
@@ -42,6 +44,8 @@ export function loadFixture(): Record<string, any>[] {
         return null;
       }
     })
+    // Bergen's fixture lines are { delayMs, event }; ours are bare events with ts.
+    .map((l) => (l && l.event ? { ...l.event, delayMs: l.delayMs } : l))
     .filter((e) => e && typeof e.type === "string");
 }
 
@@ -57,10 +61,11 @@ export const mockRunner: Runner = {
       if (BACKEND_TYPES.has(e.type)) continue;
       if (e.type === "finding.dropped" && e.reason !== "classifier_disagreed") continue;
       const ts = Date.parse(e.ts);
-      const gap = prevTs !== null && !Number.isNaN(ts) ? Math.min(Math.max(ts - prevTs, 0), 2000) : 300;
+      let gap = prevTs !== null && !Number.isNaN(ts) ? Math.min(Math.max(ts - prevTs, 0), 2000) : 300;
+      if (typeof e.delayMs === "number") gap = e.delayMs;
       if (!Number.isNaN(ts)) prevTs = ts;
       await sleep(gap / speed);
-      const { seq, ts: _ts, runId, ...rest } = e;
+      const { seq, ts: _ts, runId, delayMs, ...rest } = e;
       appendEvent(run.id, rest);
     }
   },

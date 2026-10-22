@@ -193,3 +193,18 @@ button{font-family:inherit}
 .lid{margin-top:14px;display:grid;justify-items:center;gap:6px;font-family:var(--display);font-size:9px;text-align:center}
 .lap{width:70px;height:8px;border:2px solid var(--ink);background:var(--beige);border-radius:2px 2px 0 0}
 a.plain{color:inherit}
+.p5{grid-column:1 / -1}
+@media (max-width:900px){.p5{grid-column:auto}}
+.why{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:700px){.why{grid-template-columns:1fr}}
+.why>div{border:1.5px solid var(--ink);background:#fff;padding:12px;display:grid;gap:6px;justify-items:center;text-align:center}
+.why .h{margin:4px 0 0;font-size:12px}
+.why .l{font-size:11px;color:#555}
+.fig{height:64px;width:100%;display:flex;align-items:center;justify-content:center}
+.ruler{flex-direction:column;gap:6px;align-items:stretch;padding:0 8px}
+.ruler .r{display:grid;grid-template-columns:44px 1fr;gap:6px;align-items:center;font-size:9px;font-family:var(--display)}
+.ruler .r i{display:block;height:9px;background:var(--ink);border:1px solid var(--ink)}
+.receipt2{gap:8px;font-size:11px;font-weight:600}
+.stairs{gap:4px;align-items:flex-end}
+.stairs i{display:block;width:16px;background:var(--ink)}
+.stairs i:nth-child(1){height:10px}.stairs i:nth-child(2){height:20px}.stairs i:nth-child(3){height:30px}.stairs i:nth-child(4){height:42px}.stairs i:nth-child(5){height:56px;background:var(--good)}

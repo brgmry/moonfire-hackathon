@@ -12,6 +12,9 @@ Screen: `/pitch`, window 01.
 
 Who benefits, one breath each: investors before the term sheet, anyone hiring engineers, the engineer who did the work.
 
+Then the bottom window, the question every judge is holding:
+> Why not just hand the repo to Claude? Three reasons. Comparable: one rubric computed by code, so repo A and repo B sit on the same scale. Verifiable: it built it and ran it, and every point is a file, a line and a quote you can check. Compounds: every run writes memory, so the thousandth repo scores faster, cheaper and against a percentile of everything scored before. A chat with an agent is an opinion. This is a measurement.
+
 ## 1:00 · 02 The crew (Allen, 60s)
 Screen: `/pitch`, window 02. Point at the sprites, top to bottom.
 > One Cloud Run job per repo. The orchestrator clones, installs, splits the repo into chunks and spawns up to 24 explorers on Haiku, one per chunk. They return findings only: file, line, verbatim quote. A compiler builds it, a runner runs the tests, a claims agent checks the README against the code, git blame says who wrote what, and a classifier drops any finding the quote doesn't support.
@@ -40,7 +43,7 @@ Close the laptop lid. Hold up the phone.
 > The service keeps the run. The laptops are closed and your phones are still updating.
 
 ## 4:45 · Close (Bergen, 15s)
-> A VC pays an associate two days for this. The crew did it in four minutes for about 40p. shipitornot.com.
+> A VC pays an associate two days for this. The crew did it in two minutes for under a pound. shipitornot.com.
 
 ## Fallbacks
 | Problem | Do |
@@ -49,6 +52,13 @@ Close the laptop lid. Hold up the phone.
 | Backend unreachable | `/run/demo`, say "recorded run" |
 | Projector too small | `?stage=1`, close Evidence and Leaderboard windows, use the phone for evidence |
 | Wi-Fi dies | phone hotspot, demo mode works offline once loaded |
+
+## Likely questions
+- **Why not just ask an agent?** The three reasons above. Add: an agent will tell you the README looks great, because it read the README.
+- **Is the score real or made up?** The sandbox never emits a number. The backend computes it from findings with a rubric you can read in `specs/00-contract.md`. Rerun the same commit and you get the same score.
+- **Does it scale?** Churn-ranked chunks, 24 cap, Haiku explorers, cached prompts. under a pound a repo. Memory makes repeat runs near free.
+- **What is the network effect?** Every scored repo improves the install recipes and the percentile. The benchmark is the moat.
+- **What did humans do?** Window 04. Paste the URL, pick the demo repos, that is it.
 
 ## Judging weights (from the sheet)
 50% did it work, 30% was it useful, the rest is showing the work. The live run covers the first, window 01 the second, the Mac screen the third.

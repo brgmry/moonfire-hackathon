@@ -1,0 +1,154 @@
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { streamSSE } from "hono/streaming";
+import { serve } from "@hono/node-server";
+import { appendEvent, createRun, getRun, listRuns, newRunId, restore, subscribe } from "./runs.js";
+import { headSha, loadMemory, lookup, repoKey } from "./memory.js";
+import { pickRunner } from "./runner/index.js";
+import type { Event, RunState } from "./types.js";
+
+const PORT = Number(process.env.PORT ?? 8080);
+const INTERNAL_TOKEN = process.env.INTERNAL_TOKEN ?? "dev";
+const ORIGINS = (process.env.CORS_ORIGIN ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const runner = pickRunner();
+
+const app = new Hono();
+
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (!origin) return origin;
+      if (ORIGINS.includes("*") || ORIGINS.includes(origin)) return origin;
+      if (origin.startsWith("http://localhost:") || origin.endsWith(".vercel.app")) return origin;
+      return null;
+    },
+    allowHeaders: ["Content-Type", "Authorization", "Last-Event-ID"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+  }),
+);
+
+app.get("/healthz", (c) => c.text("ok"));
+
+app.get("/runs", (c) =>
+  c.json(listRuns().map((s) => ({ id: s.id, repoUrl: s.repoUrl, status: s.status, score: s.score.total, lastSeq: s.lastSeq }))),
+);
+
+app.post("/runs", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const repoUrl = String(body.repoUrl ?? "").trim();
+  if (!/^https:\/\/github\.com\/[^/]+\/[^/]+/.test(repoUrl)) return c.json({ error: "repoUrl must be https://github.com/<owner>/<repo>" }, 400);
+  const id = newRunId();
+  const run = createRun(id, repoUrl, body.by);
+  appendEvent(id, { type: "run.created", repoUrl, by: body.by ?? "anon" });
+  void start(run.state, Boolean(body.fresh));
+  return c.json({ id });
+});
+
+// Same repo at the same commit: replay what the crew found last time instead of starting a sandbox.
+async function start(s: RunState, fresh: boolean) {
+  if (!fresh && process.env.MEMORY !== "off") {
+    const sha = await headSha(s.repoUrl);
+    const hit = lookup(sha ? repoKey(s.repoUrl, sha) : null);
+    const old = hit ? getRun(hit.runId) : undefined;
+    if (old && old.state.id !== s.id) return replayMemory(s, old.events);
+  }
+  await runner.start(s);
+}
+
+const REPLAYED = new Set(["repo.profile", "install.done", "chunk.created", "agent.spawned", "agent.done", "finding.added", "finding.dropped", "claim.added", "compile.done", "run.done", "app.screenshot", "contributors"]);
+
+async function replayMemory(s: RunState, events: Event[]) {
+  appendEvent(s.id, { type: "sandbox.started", executionId: "memory", runner: "mock" });
+  const sourceRun = events[0]?.runId;
+  const hitChunks = new Set<string>();
+  for (const e of events) {
+    if (!REPLAYED.has(e.type)) continue;
+    if (e.type === "finding.dropped" && e.reason !== "classifier_disagreed") continue;
+    const { seq, ts, runId, ...rest } = e;
+    if (e.type === "agent.done") rest.tokens = { in: 0, out: 0, cacheRead: 0 };
+    await new Promise((r) => setTimeout(r, e.type === "finding.added" ? 60 : 30));
+    appendEvent(s.id, rest);
+    if (e.type === "chunk.created" && !hitChunks.has(e.chunk.id)) {
+      hitChunks.add(e.chunk.id);
+      appendEvent(s.id, { type: "memory.hit", chunkId: e.chunk.id, source: `run ${sourceRun}` });
+    }
+  }
+}
+
+app.get("/runs/:id", (c) => {
+  const run = getRun(c.req.param("id"));
+  return run ? c.json(run.state) : c.json({ error: "not found" }, 404);
+});
+
+app.get("/runs/:id/events", (c) => {
+  const id = c.req.param("id");
+  const run = getRun(id);
+  if (!run) return c.json({ error: "not found" }, 404);
+  const name = c.req.query("name")?.slice(0, 40);
+  const after = Number(c.req.header("Last-Event-ID") ?? c.req.query("after") ?? 0) || 0;
+  c.header("Cache-Control", "no-cache");
+  c.header("X-Accel-Buffering", "no");
+  return streamSSE(c, async (stream) => {
+    // run.events is ordered by seq; the writer walks it, woken by each new event.
+    let i = run.events.findIndex((e) => e.seq > after);
+    if (i < 0) i = run.events.length;
+    let wake: (() => void) | null = null;
+    let closed = false;
+    const unsub = subscribe(id, () => wake?.());
+    const ping = setInterval(() => void stream.write(": ping\n\n").catch(() => {}), 30_000);
+    stream.onAbort(() => {
+      closed = true;
+      wake?.();
+    });
+    if (name) appendEvent(id, { type: "presence.join", name });
+    try {
+      while (!closed) {
+        while (i < run.events.length && !closed) {
+          const e = run.events[i++];
+          await stream.writeSSE({ id: String(e.seq), data: JSON.stringify(e) });
+        }
+        if (closed) break;
+        await new Promise<void>((r) => (wake = r));
+        wake = null;
+      }
+    } finally {
+      clearInterval(ping);
+      unsub();
+      if (name) appendEvent(id, { type: "presence.leave", name });
+    }
+  });
+});
+
+app.post("/runs/:id/actions", async (c) => {
+  const id = c.req.param("id");
+  const run = getRun(id);
+  if (!run) return c.json({ error: "not found" }, 404);
+  const body = await c.req.json().catch(() => ({}));
+  if (!["rerun_chunk", "pin"].includes(body.type)) return c.json({ error: "type must be rerun_chunk or pin" }, 400);
+  appendEvent(id, { type: "action", action: body.type, chunkId: body.chunkId, findingId: body.findingId, by: body.by });
+  if (body.type === "rerun_chunk" && body.chunkId) void runner.rerunChunk(run.state, body.chunkId);
+  return c.json({ ok: true });
+});
+
+app.post("/internal/events", async (c) => {
+  if (c.req.header("Authorization") !== `Bearer ${INTERNAL_TOKEN}`) return c.json({ error: "unauthorized" }, 401);
+  const body = await c.req.json().catch(() => null);
+  if (!body?.runId || !Array.isArray(body.events)) return c.json({ error: "body must be { runId, events: [] }" }, 400);
+  // A run the backend did not start (a stub job, a manual test) gets created on first contact.
+  if (!getRun(body.runId)) {
+    createRun(body.runId, "");
+    appendEvent(body.runId, { type: "run.created", repoUrl: body.events.find((e: any) => e.repoUrl)?.repoUrl ?? "", by: "sandbox" });
+  }
+  let seq = 0;
+  for (const e of body.events) {
+    if (e && typeof e.type === "string") seq = appendEvent(body.runId, e).seq;
+  }
+  return c.json({ ok: true, seq });
+});
+
+const restored = await restore();
+await loadMemory();
+serve({ fetch: app.fetch, port: PORT }, () =>
+  console.log(JSON.stringify({ severity: "INFO", msg: `backend on :${PORT}`, runner: process.env.RUNNER ?? "mock", restored })),
+);

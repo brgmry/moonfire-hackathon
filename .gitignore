@@ -1,2 +1,6 @@
 .env
 spike/data/
+node_modules/
+backend/data/
+sandbox/.venv/
+__pycache__/

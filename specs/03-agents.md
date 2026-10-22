@@ -5,17 +5,29 @@ Python 3.12, `claude-agent-sdk`, one process per run, started by the container e
 ## Shared: `sandbox/events.py`
 `emit(type, **payload)`: appends to an in-memory list and flushes to the backend in batches of 20 or every 500ms, whichever first, with the bearer token. Retries 3 times, then logs and drops. Every agent imports this and nothing else from the backend.
 
-## A3. Orchestrator and chunking (5:00 to 6:00)
-`sandbox/orchestrator.py`, Sonnet 5.5, but most of it is plain Python; the model is only asked to choose the install and build commands when the profile is ambiguous.
-1. `git clone --depth 50 $REPO_URL /work`. Emit `sandbox.started` is the backend's; the orchestrator's first event is `repo.profile`:
-   - `files`: `git ls-files` minus ignores: `node_modules/`, `vendor/`, `dist/`, `build/`, `.next/`, `target/`, `__pycache__/`, `*.min.*`, `*.lock`, `*-lock.json`, `*.generated.*`, `*.snap`, `*.map`, images, fonts, binaries, anything over 200KB.
-   - `languages` by extension share of bytes. `packageManager` from lockfiles (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `uv.lock`, `poetry.lock`, `requirements.txt`, `Cargo.lock`, `go.sum`). `framework` from markers (`next.config.*`, `vite.config.*`, `manage.py`, `pyproject.toml [tool.poetry]`, `Cargo.toml`, `go.mod`). `hasTests` from `test`, `tests`, `__tests__`, `*_test.go`, `*.test.*`, `*.spec.*`. `hasBuild` from a build script or compiler manifest. `stars` from one GitHub API call (unauthenticated is fine).
-2. Install: recipe from `MEMORY_JSON` if the manager matches, else the default per manager. `subprocess` with a 180s timeout. Emit `install.done`. Failure is a finding later, not a crash.
-3. Chunk: group files by first path segment (and by package in a monorepo: any dir with its own `package.json` or `pyproject.toml`). Split any group over 40 files or 150KB into pieces by sorted path. Compute `churn` per chunk: `git log --since=1.year --name-only --pretty=format:` counted per path. If more than `MAX_CHUNKS`, keep the top by churn, mark the rest `sampled: true` and still emit them so the treemap is complete. Emit `chunk.created` per chunk.
-4. Dispatch: `asyncio.Semaphore(MAX_PARALLEL)`. Spawn explorers (one per non-sampled chunk), the claims agent, the compile agent, the run agent and git stats, all as asyncio tasks. Emit `agent.spawned` for each with its `agentId`, `role`, `chunkId`, `model`.
-5. Wait for all, with a 540s overall deadline (the job's timeout is 600). Emit `agent.done` for the orchestrator with total tokens. Exit 0.
+## A3. Orchestrator, planner and chunking
+`sandbox/orchestrator.py` runs the steps in plain Python. The split is decided by `sandbox/planner.py`: Opus 5.5 (`claude-opus-5-5`) at medium effort, with Read, Grep and Glob, 12 turns, a 120s cap and a JSON schema for its output (`prompts/planner.md`).
+1. Clone `--depth 50`. A ref pinned in the URL (`/tree/<ref>`, `#<sha>`, `@<ref>`) is fetched exactly. Emit `repo.profile` (file list after ignores, languages, package manager, framework, tests, build).
+2. Start the default install in the background (a memory recipe if one exists, else the default for the package manager), and start the claims agent. Neither needs the plan.
+3. Plan. The planner sees the profile, the default install command, the file list with sizes and one-year churn (directories to depth 3 for repos over 300 files) and the README head, and may peek at files. It returns:
+   - `chunks`: each with `name`, `paths` (directory prefixes or files), `focus` (what its explorer must check) and `priority` (1 to 5);
+   - `skip`: vendored, generated, fixture and docs paths;
+   - `kind`: `cli`, `api`, `web` or `lib`;
+   - `install`: a command, empty when the default is right;
+   - `summary`: one sentence on what the repo is.
+4. Code turns the plan into a partition. Each file goes to the chunk with the longest matching path. Unmatched files form per-folder chunks at priority 1. Skipped paths become `sampled` chunks, so the treemap stays complete. Any chunk over 40 files or 150KB is split by sorted path. If more than `MAX_CHUNKS` remain, the highest priority (then churn) get explorers and the rest are `sampled`. `chunk.created` carries `name`, `focus` and `priority` besides the contract fields. If the planner fails, times out or returns nothing usable, the rule-based chunker runs instead (first path segment or monorepo package, split by size, top 24 by churn).
+5. Install fallback: if the default install failed, or there was none, and the plan has an `install` command, run that once.
+6. Dispatch with `asyncio.Semaphore(MAX_PARALLEL)`:
+   - one explorer per non-sampled chunk, with its `focus` in the user turn;
+   - git stats;
+   - after the install, the compiler, and the runner with `ctx["plan"]["kind"]` as its kind;
+   - after the explorers, the classifier.
+   Every agent is supervised: a crash or hang still emits `agent.done`.
+7. The 540s overall deadline still applies. The orchestrator's `agent.done` carries the planner's tokens and key.
 
-Done: a local run against a tiny repo emits profile, install, chunks and spawns, visible in Bergen's UI by 6:00.
+`RERUN_CHUNK` plus `RERUN_CHUNK_JSON` (the chunk from the backend's state) re-explore one chunk.
+
+Done: python-slugify, json-server and flask plan in about 15s for about 5 cents each, with every file in exactly one chunk.
 
 ## A4. Explorer and claims agent (6:00 to 6:45)
 `sandbox/explorer.py`, Haiku 5.5, one `query()` per chunk with a static system prompt and tools `Read`, `Grep`, `Glob` only (no Bash, no Write). The prompt carries the rubric dimensions, the finding JSON shape, the chunk's file list and the doNot lines from memory. Instruction: read every file in the list, emit a finding for anything notable, up to 12 per chunk, at least one `good` if the code deserves it, quotes verbatim, no prose. Output is parsed as a JSON array; a parse failure retries once with "output JSON only". Each finding gets an `id`, `agentId`, `chunkId` and goes out as `finding.added`. Emit `agent.working` on every file read (hook on the `Read` tool), `agent.done` with usage at the end.

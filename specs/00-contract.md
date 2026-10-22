@@ -30,7 +30,7 @@ Payloads are flat on the event everywhere (sandbox, backend, `packages/contract`
 | `sandbox.started` | `executionId, runner: "cloudrun" \| "local" \| "mock"` | backend |
 | `repo.profile` | `name, defaultBranch, commit, stars, languages: {ts: 61, py: 39}, packageManager, framework, hasTests, hasBuild, hasDockerfile, fileCount, files: [paths]` | orchestrator |
 | `install.done` | `ok, manager, durationMs, errorsTail` | orchestrator |
-| `chunk.created` | `chunk: { id, path, files: [paths], bytes, churn, sampled: bool }` | orchestrator |
+| `chunk.created` | `chunk: { id, path, files: [paths], bytes, churn, sampled: bool, name?, focus?, priority? }` (name, focus, priority come from the Opus planner) | orchestrator |
 | `agent.spawned` | `agentId, role, chunkId?, model` | orchestrator |
 | `agent.working` | `agentId, file` | any agent |
 | `agent.done` | `agentId, tokens: { in, out, cacheRead }, key?` (key name that paid) | any agent |
@@ -103,4 +103,4 @@ We each bring a key and run on all three.
 - `GET /keys` returns `[{ name, budgetUsd, spentUsd, remainingUsd, status: "ok" | "cooling" | "exhausted" | "spent" }]`, no secrets.
 
 ## Models
-`claude-sonnet-5-5`: orchestrator, compiler, runner, writer. `claude-haiku-5-5`: explorer, claims, classifier. Static system prompts, same tool order every call, so prompt caching hits.
+`claude-opus-5-5` at medium effort: orchestrator's planner. `claude-sonnet-5-5`: compiler, runner, writer. `claude-haiku-5-5`: explorer, claims, classifier. Static system prompts, same tool order every call, so prompt caching hits.

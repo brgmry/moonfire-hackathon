@@ -7,7 +7,7 @@ CORS=${1:-${CORS_ORIGIN:-*}}
 gcloud run deploy api --source ./backend --region "$REGION" --min-instances 1 --max-instances 1 \
   --no-cpu-throttling --timeout 3600 --allow-unauthenticated --port 8080 \
   --set-secrets "$SECRETS" \
-  --set-env-vars "^@^GCS_BUCKET=$GCS_BUCKET@RUNNER=cloudrun@GCP_PROJECT=$PROJECT_ID@GCP_REGION=$REGION@JOB_NAME=$JOB_NAME@CORS_ORIGIN=$CORS@PUBLIC_API_URL=https://api-$PROJECT_NUMBER.$REGION.run.app"
+  --set-env-vars "^@^GCS_BUCKET=$GCS_BUCKET@RUNNER=cloudrun@GCP_PROJECT=$PROJECT_ID@GCP_REGION=$REGION@JOB_NAME=$JOB_NAME@CORS_ORIGIN=$CORS@PUBLIC_API_URL=https://api-$PROJECT_NUMBER.$REGION.run.app@ANTHROPIC_KEY_BUDGETS=$KEY_BUDGETS"
 URL=$(gcloud run services describe api --region "$REGION" --format='value(status.url)')
 gcloud run jobs update "$JOB_NAME" --region "$REGION" --update-env-vars "API_URL=$URL"
 echo "API_URL=$URL"

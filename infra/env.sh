@@ -16,3 +16,5 @@ if gcloud secrets describe anthropic-keys --project "$PROJECT_ID" >/dev/null 2>&
   SECRETS="$SECRETS,ANTHROPIC_API_KEYS=anthropic-keys:latest"
 fi
 export SECRETS
+# USD each key may spend; the pool splits calls by each key's share of what is left.
+export KEY_BUDGETS="akshay:70,allen:70,bergen:70,default:70"

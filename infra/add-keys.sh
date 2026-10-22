@@ -28,7 +28,7 @@ echo "stored: $(printf '%s' "$pairs" | tr ',' '\n' | cut -d: -f1 | paste -sd' ')
 
 # New revision / job config picks the pool up; the single key stays as the fallback.
 gcloud run services update api --region "$REGION" --project "$PROJECT_ID" \
-  --update-secrets ANTHROPIC_API_KEYS=anthropic-keys:latest
+  --update-secrets ANTHROPIC_API_KEYS=anthropic-keys:latest --update-env-vars "^@^ANTHROPIC_KEY_BUDGETS=$KEY_BUDGETS"
 gcloud run jobs update "$JOB_NAME" --region "$REGION" --project "$PROJECT_ID" \
   --update-secrets ANTHROPIC_API_KEYS=anthropic-keys:latest
 curl -s "https://api-$PROJECT_NUMBER.$REGION.run.app/keys"; echo

@@ -273,3 +273,4 @@ a.plain{color:inherit}
 .boxes i{display:block;width:10px;height:10px;background:var(--ink);animation:spin 1.6s infinite}
 @keyframes spin{0%,100%{background:var(--ink)}50%{background:var(--good)}}
 @media (prefers-reduced-motion:reduce){.boxes i{animation:none}}
+.badge.bath{height:18px;padding:0 5px;background:#0f4c81;color:#fff;font-size:9px;letter-spacing:.04em}

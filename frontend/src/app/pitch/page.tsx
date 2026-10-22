@@ -33,7 +33,7 @@ export default function Pitch() {
     (
         <Window title="The team" className="p6" tip="built in one evening at Moonfire Build Night, 22 Oct 2026">
           <div className="team">
-            <div data-tip="frontend, the Mac world, contract, benchmark, pitch"><Sprite role="orchestrator" frame="idle" scale={2.5} /><b>Bergen Merey</b><span><i className="badge yc" aria-label="Y Combinator">Y</i>YC founder</span><em>frontend · the Mac · pitch</em></div>
+            <div data-tip="frontend, the Mac world, contract, benchmark, pitch"><Sprite role="orchestrator" frame="idle" scale={2.5} /><b>Bergen Merey</b><span><i className="badge bath" aria-label="University of Bath">BATH</i>University of Bath · <i className="badge yc" aria-label="Y Combinator">Y</i>YC founder</span><em>frontend · the Mac · pitch</em></div>
             <div data-tip="backend, orchestrator, planner, explorers, claims, classifier, scoring"><Sprite role="explorer" frame="idle" scale={3} /><b>Allen Bridi</b><span><i className="badge ucl" aria-label="UCL">UCL</i>MSc Computer Science · founder of 3 startups</span><em>backend · the crew · scoring</em></div>
             <div data-tip="Google Cloud, sandbox image and jobs, compile, run and git agents"><Sprite role="compiler" frame="idle" scale={3} /><b>Akshay Gujjula</b><span><i className="badge ucl" aria-label="UCL">UCL</i>2nd-year Computer Science · CTO, Vasmio</span><em>Google Cloud · sandboxes · build and run agents</em></div>
           </div>

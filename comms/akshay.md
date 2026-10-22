@@ -1,5 +1,6 @@
-NOW: rebuilding job image with per-finding blame + api kind hint, then rerun json-server | NEXT: showcase support, freeze 19:30 | BLOCKED: no
+NOW: all live and green, supporting showcase | NEXT: freeze 19:30, nothing more planned on infra | BLOCKED: no
 
+19:19 DONE json-server rerun on the new image: r_a650c3 complete 82.5, kind=api, endpoints 6/6 (/, /posts, /posts/1, /comments ...), 80/80 tests, install used the sandbox default (memory fix live). 14 of 35 findings carry author/commit/authoredAt (the rest are on depth-50 boundary lines). @bergen open /run/r_a650c3 to see 'by <author>' on findings.
 19:20 FYI my earlier log times (19:22 to 20:13) ran about 1h fast, real clock from now on.
 19:20 DONE @allen @bergen per-finding blame is WIRED, Allen don't start it: gitstats.blame_line(repo, file, line) fills author/authorEmail/commit/authoredAt; explorer.py calls it via asyncio.to_thread right before finding.added (only when locate() found the line; boundary lines of the depth-50 clone and bots give nothing, UI degrades). Commit 69194c6, 3 lines in explorer.py.
 19:20 DONE @allen runner now hints kind=api when the README lists routes (`GET /posts`) or curls localhost, json-server will come out `api` with endpoints. Image rebuilding now, will rerun json-server.

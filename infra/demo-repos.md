@@ -32,3 +32,5 @@ Cold start: about 11s from `runJob` to the first sandbox event. Two executions r
 | `https://github.com/ErickKS/vite-deploy#19f6b9e8e6235a0f36c6f0a6e65ba4d596e7b5a9` | r_bd84c4 | complete | 67.4 | ~60s | web: dev server 200 on /vite-deploy/, no tests (runs 8/15 with note), 6 of 9 claims delivered |
 
 Open any of them at `https://api-1047822996598.europe-west2.run.app/runs/<id>` or in the frontend at `/run/<id>`.
+
+Rerun after the review fixes (19:18): json-server r_a650c3 complete 82.5, kind api, endpoints 6/6, 80/80 tests, findings carry git blame authors. slugify#sha r_7ace52 complete 84.9.

@@ -12,8 +12,8 @@ export const ROLES: Role[] = ['orchestrator', 'explorer', 'claims', 'compiler', 
 
 /** Accent colour per role. Matches assets/avatars/README.md once the sprites land. */
 export const ROLE_ACCENT: Record<Role, string> = {
-  orchestrator: '#ffd23f', explorer: '#5ad1ff', claims: '#ff8ad8', compiler: '#ffa552',
-  runner: '#8dff7a', classifier: '#c9a6ff', git: '#ffffff', writer: '#f6f2b0',
+  orchestrator: '#FFD23F', explorer: '#FF7A1A', claims: '#3FA7FF', compiler: '#9BE22E',
+  runner: '#FF4D4D', classifier: '#B388FF', git: '#2EC4B6', writer: '#FF6BB5',
 };
 
 /** Rubric maxima, in display order. The backend computes points; the frontend only renders. */
@@ -52,13 +52,13 @@ export interface Author { name: string; email: string; commits: number; lines: n
 export interface Contributors { authors: Author[]; truncated: boolean; fork: boolean }
 export interface DimensionScore { points: number; max: number; top: string[] }
 
-/** Every event the backend numbers and broadcasts. The sandbox sends these without `seq`. */
+/** Every event the backend numbers and broadcasts. Payload fields sit flat on the event. The sandbox sends these without `seq`. */
 export type EventPayload =
   | { type: 'run.created'; repoUrl: string; by: string }
   | { type: 'presence.join'; name: string }
   | { type: 'presence.leave'; name: string }
   | { type: 'sandbox.started'; executionId: string; runner: RunnerKind }
-  | { type: 'repo.profile'; profile: RepoProfile }
+  | ({ type: 'repo.profile' } & RepoProfile)
   | { type: 'install.done'; ok: boolean; manager: string; durationMs: number; errorsTail: string }
   | { type: 'chunk.created'; chunk: Chunk }
   | { type: 'agent.spawned'; agentId: string; role: Role; chunkId?: string; model: string }
@@ -67,14 +67,15 @@ export type EventPayload =
   | { type: 'finding.added'; finding: Finding }
   | { type: 'finding.dropped'; findingId: string; reason: 'file_not_in_repo' | 'classifier_disagreed' | 'quote_not_found' }
   | { type: 'claim.added'; claim: Claim }
-  | { type: 'compile.done'; result: CompileResult }
-  | { type: 'run.done'; result: RunResult }
+  | ({ type: 'compile.done' } & CompileResult)
+  | ({ type: 'run.done' } & RunResult)
   | { type: 'app.screenshot'; url: string }
-  | { type: 'contributors'; contributors: Contributors }
-  | { type: 'score.updated'; dimension: Dimension; points: number; max: number; top: string[] }
+  | ({ type: 'contributors' } & Contributors)
+  | { type: 'score.updated'; dimension: Dimension; points: number; max: number; top: string[]; note?: string }
   | { type: 'report.ready'; score: number; dimensions: Record<Dimension, DimensionScore>; markdown: string; tokens: Tokens }
   | { type: 'memory.hit'; chunkId: string; source: string }
-  | { type: 'run.finished'; status: 'complete' | 'partial' | 'failed'; reason?: string };
+  | { type: 'run.finished'; status: 'complete' | 'partial' | 'failed'; reason?: string }
+  | { type: 'action'; action: string; chunkId?: string; findingId?: string; by: string };
 
 export type EventType = EventPayload['type'];
 export type RunEvent = EventPayload & { seq: number; ts: string; runId: string };
@@ -114,7 +115,7 @@ export function apply(s: RunState, e: RunEvent): RunState {
     case 'presence.join': return { ...n, presence: n.presence.includes(e.name) ? n.presence : [...n.presence, e.name] };
     case 'presence.leave': return { ...n, presence: n.presence.filter(p => p !== e.name) };
     case 'sandbox.started': return { ...n, runner: e.runner };
-    case 'repo.profile': return { ...n, profile: e.profile };
+    case 'repo.profile': { const { type, seq, ts, runId, ...profile } = e; void type; void seq; void ts; void runId; return { ...n, profile: profile as RepoProfile }; }
     case 'install.done': return { ...n, install: { ok: e.ok, manager: e.manager, durationMs: e.durationMs, errorsTail: e.errorsTail } };
     case 'chunk.created': return { ...n, chunks: [...n.chunks.filter(c => c.id !== e.chunk.id), e.chunk] };
     case 'agent.spawned': return { ...n, agents: { ...n.agents, [e.agentId]: { agentId: e.agentId, role: e.role, chunkId: e.chunkId, model: e.model, status: 'working', spawnedAt: e.ts, lastActiveAt: e.ts } } };
@@ -137,10 +138,10 @@ export function apply(s: RunState, e: RunEvent): RunState {
     }
     case 'finding.dropped': return { ...n, findings: n.findings.map(f => f.id === e.findingId ? { ...f, valid: false } : f) };
     case 'claim.added': return { ...n, claims: [...n.claims.filter(c => c.id !== e.claim.id), e.claim] };
-    case 'compile.done': return { ...n, compile: e.result };
-    case 'run.done': return { ...n, run: e.result };
+    case 'compile.done': { const { type, seq, ts, runId, ...r } = e; void type; void seq; void ts; void runId; return { ...n, compile: r as CompileResult }; }
+    case 'run.done': { const { type, seq, ts, runId, ...r } = e; void type; void seq; void ts; void runId; return { ...n, run: r as RunResult }; }
     case 'app.screenshot': return { ...n, screenshotUrl: e.url };
-    case 'contributors': return { ...n, contributors: e.contributors };
+    case 'contributors': return { ...n, contributors: { authors: e.authors, truncated: e.truncated, fork: e.fork } };
     case 'score.updated': {
       const dimensions = { ...n.score.dimensions, [e.dimension]: { points: e.points, max: e.max, top: e.top } };
       const total = Object.values(dimensions).reduce((acc, d) => acc + (d?.points ?? 0), 0);
@@ -149,10 +150,34 @@ export function apply(s: RunState, e: RunEvent): RunState {
     case 'report.ready': return { ...n, report: e.markdown, score: { total: e.score, dimensions: e.dimensions }, tokens: e.tokens };
     case 'memory.hit': return { ...n, memoryHits: [...n.memoryHits, e.chunkId] };
     case 'run.finished': return { ...n, status: e.status };
+    case 'action': return n;
     default: return n;
   }
 }
 
 export function reduceAll(id: string, events: RunEvent[]): RunState {
   return events.reduce(apply, initialState(id));
+}
+
+/** `GET /runs/:id` as the backend returns it (agents as an array, empty objects for absent parts). Normalise into RunState. */
+export function fromServerState(j: Record<string, unknown>, id: string): RunState {
+  const base = initialState(id);
+  const has = (o: unknown) => !!o && typeof o === 'object' && Object.keys(o as object).length > 0;
+  const agentsRaw = Array.isArray(j.agents) ? (j.agents as Agent[]) : Object.values((j.agents as Record<string, Agent>) ?? {});
+  const agents: Record<string, Agent> = {};
+  for (const a of agentsRaw) agents[a.agentId] = { ...a, spawnedAt: a.spawnedAt ?? '', lastActiveAt: a.lastActiveAt ?? '', status: a.status === 'done' ? 'done' : 'working' };
+  const mh = (j.memoryHits as ({ chunkId: string } | string)[]) ?? [];
+  return {
+    ...base,
+    repoUrl: (j.repoUrl as string) ?? '', by: (j.by as string) ?? '', status: (j.status as RunStatus) ?? 'created', runner: j.runner as RunnerKind | undefined,
+    profile: has(j.profile) ? (j.profile as RepoProfile) : undefined,
+    install: has(j.install) ? (j.install as RunState['install']) : undefined,
+    chunks: (j.chunks as Chunk[]) ?? [], agents, findings: (j.findings as Finding[]) ?? [], claims: (j.claims as Claim[]) ?? [],
+    compile: has(j.compile) ? (j.compile as CompileResult) : undefined, run: has(j.run) ? (j.run as RunResult) : undefined,
+    screenshotUrl: (j.screenshotUrl as string) ?? (j.screenshot as string) ?? undefined,
+    contributors: has(j.contributors) ? (j.contributors as Contributors) : undefined,
+    score: (j.score as RunState['score']) ?? base.score, report: (j.report as string) || undefined,
+    tokens: (j.tokens as Tokens) ?? base.tokens, presence: (j.presence as string[]) ?? [],
+    memoryHits: mh.map((m) => (typeof m === 'string' ? m : m.chunkId)), lastSeq: (j.lastSeq as number) ?? 0,
+  };
 }

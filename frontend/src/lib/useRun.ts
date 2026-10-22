@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { apply, initialState, reduceAll, type RunEvent, type RunState } from "@rvr/contract";
+import { apply, fromServerState, initialState, reduceAll, type RunEvent, type RunState } from "@rvr/contract";
 import { API, viewerName } from "./api";
 
 /** One EventSource, one reducer, resync on focus. The only client state is what is on screen. */
@@ -18,7 +18,7 @@ export function useRun(id: string) {
         const r = await fetch(`${API}/runs/${id}`);
         if (!r.ok) return;
         const j = await r.json();
-        setState(Array.isArray(j.events) ? reduceAll(id, j.events as RunEvent[]) : (j as RunState));
+        setState(Array.isArray(j.events) ? reduceAll(id, j.events as RunEvent[]) : fromServerState(j, id));
       } catch { /* backend away, the stream will catch up */ }
     };
     const open = () => {

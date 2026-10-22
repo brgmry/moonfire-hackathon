@@ -1,5 +1,29 @@
-NOW: fixing hardcoded repo assumptions (audit running) | NEXT: Cloud Run E2E after Akshay's redeploy | BLOCKED: no
+NOW: audit fixes pushed, waiting on a redeploy | NEXT: Cloud Run E2E after the redeploy, then standby | BLOCKED: no
 
+19:32 DONE audit fixes, tested (unit 3/3, mock e2e 12/12, real slugify e2e green at 88.8 in 75s, fatal clone test). Commits 2836f6b, f25888a and the sandbox one after them. They cover:
+   - pasted links (?tab=, /blob/, issues, http, no scheme) are normalized, and a missing or private repo gets a 400 with a message;
+   - a clone failure ends the run `failed` with the reason instead of complete 0/100;
+   - the sandbox can no longer post score.updated, report.ready or run.finished;
+   - big repos aren't punished by sheer finding count;
+   - planner-skipped docs don't cut coverage;
+   - Go, Rust and Java get the repo's average on compiles and runs instead of losing ~25 points;
+   - "no build system" scores 5;
+   - secrets are scrubbed from the env the repo's code sees.
+19:32 NEED @akshay redeploy the backend AND rebuild the job image from master. If you're near freeze and nervous, the backend alone is the bigger win (link normalization, 404 refusal, fair scoring, forged-event filter). Your rollback cmd covers both. On your side, by risk:
+   1) `--memory 2Gi` on the api service: it's on the 512MiB default and keeps every run in RAM;
+   2) the job at 8Gi: the filesystem is RAM, so next build or torch repos get OOM-killed at 4Gi;
+   3) compiler and runner start together on the same checkout (next build vs next dev both write .next/), so maybe start the runner after compile.done;
+   4) k3common's README lookup is exact-case (`Readme.md` gets missed);
+   5) your Bash agents still see ANTHROPIC_API_KEY (the CLI needs it). Scrubbing it from build/test subprocess env in k3common would close that;
+   6) optional: a GITHUB_TOKEN secret on the service and the job (unauthenticated GitHub API is 60/h per IP; memory replay and stars need it).
+19:32 FYI @bergen UI items from the audit, all optional, by stage value:
+   1) show run.finished.reason when status is failed or partial ("repository not found", deadline). The reducer drops `reason` today, contract index.ts:154;
+   2) tiles: label with `chunk.name ?? chunk.path` (the planner's names read much better), and show `chunk.focus` in the tooltip;
+   3) the pitch page says the orchestrator is Sonnet 5.5 and 24 explorers at once. It's an Opus 5.5 planner and 8 at once (24 max chunks). The 'eight-sentence' writer is nine;
+   4) cache % in MenuBar/ReportWindow is cacheRead/in, which shows 430%. Use cacheRead/(in+cacheRead), like the report;
+   5) the dropped-finding tooltip always says 'not in the repo'. Keep `reason` from finding.dropped (quote_not_found, classifier_disagreed);
+   6) 'null install ok' and model 'null': render as 'no install' / 'no model';
+   7) web runs show 'tests 0/0'; show endpoints for kind web like api.
 19:18 DONE real E2E with the Opus planner, all green locally: slugify 75.8 in 93s (133/133 tests), json-server 75.7 in 75s (80/80), pallets/flask 63.7 in 135s (494/494 tests, 15 chunks, 123 findings). flask isn't a demo repo, so arbitrary repos work.
 19:18 NEED @akshay cost: a run is now ~75p, up from ~25p. The planner costs 2-7c, explorers 2-8c. compiler + runner (Sonnet) now send ~160k UNCACHED input tokens each on slugify/json-server (~$0.42-0.51 each; on flask it was 62k). Probably long Bash output re-sent on every turn. Suggest piping long commands through `| tail -40` in the prompts, and maybe max_turns 12. The pitch line says 40p, so either we get back near that or we change the line.
 19:15 DONE the orchestrator now has a model: sandbox/planner.py, Opus 5.5 at medium effort. It splits the repo by responsibility, gives each chunk a `focus` and `priority`, skips vendored/docs/fixtures, picks the kind, and suggests an install command. If it fails, the old rules run instead. Takes ~15s and ~5 cents per run. Spec: specs/03-agents.md A3.

@@ -10,3 +10,9 @@ export JOB_NAME=tester
 if [ -d "$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin" ]; then
   export PATH="$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin:$PATH"
 fi
+SECRETS="ANTHROPIC_API_KEY=anthropic-key:latest,INTERNAL_TOKEN=internal-token:latest"
+# The pooled team keys from infra/add-keys.sh, once they exist; the single key stays as the fallback.
+if gcloud secrets describe anthropic-keys --project "$PROJECT_ID" >/dev/null 2>&1; then
+  SECRETS="$SECRETS,ANTHROPIC_API_KEYS=anthropic-keys:latest"
+fi
+export SECRETS

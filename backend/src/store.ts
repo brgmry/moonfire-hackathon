@@ -10,13 +10,17 @@ const BUCKET = process.env.GCS_BUCKET;
 const DATA_DIR = process.env.DATA_DIR ?? path.resolve("data/runs");
 const storage = BUCKET ? new Storage() : null;
 
+const chains = new Map<string, Promise<void>>();
 const pending = new Map<string, { events: Event[]; timer?: NodeJS.Timeout; writing: boolean; dirty: boolean }>();
 
 export function persist(runId: string, events: Event[], last: Event) {
   if (!storage) {
-    mkdir(DATA_DIR, { recursive: true })
-      .then(() => appendFile(path.join(DATA_DIR, `${runId}.jsonl`), JSON.stringify(last) + "\n"))
+    // One write chain per run, so lines land in seq order.
+    const line = JSON.stringify(last) + "\n";
+    const next = (chains.get(runId) ?? mkdir(DATA_DIR, { recursive: true }).then(() => {}))
+      .then(() => appendFile(path.join(DATA_DIR, `${runId}.jsonl`), line))
       .catch((e) => console.error(JSON.stringify({ severity: "ERROR", msg: "persist failed", runId, err: String(e) })));
+    chains.set(runId, next);
     return;
   }
   let p = pending.get(runId);
@@ -60,7 +64,9 @@ export async function loadAll(): Promise<Map<string, Event[]>> {
           return null;
         }
       })
-      .filter((e): e is Event => !!e);
+      .filter((e): e is Event => !!e)
+      .sort((a, b) => a.seq - b.seq)
+      .filter((e, i, all) => i === 0 || e.seq !== all[i - 1].seq);
     if (evs.length) out.set(id, evs);
   };
   try {

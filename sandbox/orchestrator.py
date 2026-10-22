@@ -88,13 +88,22 @@ def _cfg() -> dict:
         memory = {}
     return {
         "run_id": os.environ.get("RUN_ID", "local"),
-        "repo_url": os.environ.get("REPO_URL", ""),
+        **dict(zip(("repo_url", "ref"), split_ref(os.environ.get("REPO_URL", "")))),
         "workdir": os.environ.get("WORKDIR", "/work"),
         "max_chunks": int(os.environ.get("MAX_CHUNKS", "24")),
         "max_parallel": int(os.environ.get("MAX_PARALLEL", "8")),
         "memory": memory if isinstance(memory, dict) else {},
         "rerun_chunk": os.environ.get("RERUN_CHUNK") or None,
     }
+
+
+def split_ref(url: str) -> tuple[str, str | None]:
+    """https://github.com/o/r/tree/<ref>, .../r#<ref> or .../r@<ref> -> (https://github.com/o/r, ref). Pins demo repos."""
+    url = url.strip()
+    m = re.match(r"^(https?://github\.com/[^/]+/[^/#@?]+?)(?:\.git)?(?:/tree/([^?#]+)|[#@]([^/?#]+))?/?$", url)
+    if not m:
+        return url, None
+    return m.group(1), m.group(2) or m.group(3)
 
 
 def sh(cmd, cwd=None, timeout=60) -> subprocess.CompletedProcess:
@@ -104,12 +113,21 @@ def sh(cmd, cwd=None, timeout=60) -> subprocess.CompletedProcess:
 
 # ---------- 1. clone and profile ----------
 
-def clone(repo_url: str, workdir: str) -> str:
+def clone(repo_url: str, workdir: str, ref: str | None = None) -> str:
     os.makedirs(workdir, exist_ok=True)
     dest = workdir if not os.listdir(workdir) else os.path.join(workdir, "repo")
-    r = sh(["git", "clone", "--depth", "50", "--no-tags", repo_url, dest], timeout=180)
-    if r.returncode != 0:
-        raise RuntimeError(f"git clone failed: {r.stderr[-500:]}")
+    if not ref:
+        r = sh(["git", "clone", "--depth", "50", "--no-tags", repo_url, dest], timeout=180)
+        if r.returncode != 0:
+            raise RuntimeError(f"git clone failed: {r.stderr[-500:]}")
+        return dest
+    # A sha, tag or branch: fetch just that history so the demo repos stay pinned.
+    os.makedirs(dest, exist_ok=True)
+    for cmd in (["git", "init", "-q"], ["git", "remote", "add", "origin", repo_url],
+                ["git", "fetch", "-q", "--depth", "50", "--no-tags", "origin", ref], ["git", "checkout", "-q", "FETCH_HEAD"]):
+        r = sh(cmd, cwd=dest, timeout=180)
+        if r.returncode != 0:
+            raise RuntimeError(f"{' '.join(cmd[:2])} failed: {r.stderr[-500:]}")
     return dest
 
 
@@ -366,7 +384,7 @@ async def run() -> None:
 
 async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
     events.emit("agent.working", agentId=orch_id, file="git clone")
-    repo = await asyncio.to_thread(clone, cfg["repo_url"], cfg["workdir"])
+    repo = await asyncio.to_thread(clone, cfg["repo_url"], cfg["workdir"], cfg.get("ref"))
     files = await asyncio.to_thread(list_files, repo)
     profile, sizes = await asyncio.to_thread(profile_repo, repo, cfg["repo_url"], files)
     if cfg["rerun_chunk"]:

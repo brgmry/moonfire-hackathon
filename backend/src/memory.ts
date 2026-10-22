@@ -37,15 +37,17 @@ export function memoryJson(): string {
 }
 
 export function repoKey(repoUrl: string, sha: string): string | null {
-  const m = repoUrl.match(/github\.com[/:]([^/]+)\/([^/#?]+?)(?:\.git)?(?:[/#?].*)?$/i);
+  const m = repoUrl.match(/github\.com[/:]([^/]+)\/([^/#@?]+?)(?:\.git)?(?:[/#@?].*)?$/i);
   return m ? `${m[1]}/${m[2]}@${sha}`.toLowerCase() : null;
 }
 
+// The commit a run will look at: HEAD, or the ref pinned with /tree/<ref>, #<ref> or @<ref>.
 export async function headSha(repoUrl: string): Promise<string | null> {
-  const m = repoUrl.match(/github\.com[/:]([^/]+)\/([^/#?]+?)(?:\.git)?(?:[/#?].*)?$/i);
+  const m = repoUrl.match(/github\.com[/:]([^/]+)\/([^/#@?]+?)(?:\.git)?(?:\/tree\/([^?#]+)|[#@]([^/?#]+))?\/?$/i);
   if (!m) return null;
+  const ref = m[3] ?? m[4] ?? "HEAD";
   try {
-    const r = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/commits/HEAD`, {
+    const r = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/commits/${encodeURIComponent(ref)}`, {
       headers: { Accept: "application/vnd.github.sha", "User-Agent": "crew" },
       signal: AbortSignal.timeout(3000),
     });

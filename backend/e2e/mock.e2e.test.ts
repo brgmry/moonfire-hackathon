@@ -1,0 +1,137 @@
+// Free and fast: the whole backend against the recorded fixture. `npm run e2e`
+import { after, before, test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { reduceAll } from "../../packages/contract/src/index.ts";
+import { assertRunShape, collect, countBy, finished, json, postJson, startServer, type Ev, type Server } from "./lib.ts";
+
+const dataDir = path.join(mkdtempSync(path.join(os.tmpdir(), "crew-e2e-")), "runs");
+const ENV = {
+  RUNNER: "mock",
+  MOCK_SPEED: "25",
+  WRITER: "off",
+  DATA_DIR: dataDir,
+  ANTHROPIC_API_KEYS: "allen:sk-fake-AAAA,bergen:sk-fake-BBBB,akshay:sk-fake-CCCC",
+  ANTHROPIC_KEY_BUDGETS: "allen:30,bergen:20,akshay:10",
+};
+let server: Server;
+let runId = "";
+let events: Ev[] = [];
+
+before(async () => {
+  server = await startServer(ENV);
+});
+after(async () => {
+  await server?.stop();
+});
+
+test("healthz and input validation", async () => {
+  assert.equal((await json(`${server.url}/healthz`)).body, "ok");
+  assert.equal((await postJson(`${server.url}/runs`, { repoUrl: "not a url" })).status, 400);
+  assert.equal((await json(`${server.url}/runs/r_nope`)).status, 404);
+});
+
+test("a mock run streams end to end over SSE", async () => {
+  const r = await postJson(`${server.url}/runs`, { repoUrl: "https://github.com/acme/pulse-cli", by: "e2e", fresh: true });
+  assert.equal(r.status, 200);
+  runId = r.body.id;
+  assert.match(runId, /^r_[0-9a-f]{6}$/);
+  events = await collect(`${server.url}/runs/${runId}/events?name=e2e-viewer`, { until: finished, timeoutMs: 60_000 });
+  const c = countBy(events);
+  for (const t of ["repo.profile", "install.done", "chunk.created", "agent.spawned", "finding.added", "claim.added", "compile.done", "run.done", "contributors", "score.updated", "report.ready", "run.finished"]) {
+    assert.ok(c[t] > 0, `no ${t} event`);
+  }
+  assertRunShape(events, assert);
+  assert.equal(events.at(-1)!.status, "complete");
+  assert.ok(events.some((e) => e.type === "presence.join" && e.name === "e2e-viewer"), "presence.join for the viewer");
+  assert.ok(events.some((e) => e.type === "finding.dropped" && e.reason === "file_not_in_repo"), "the fixture's hallucinated finding is dropped");
+  for (const t of ["repo.profile", "compile.done", "run.done", "contributors"]) {
+    const e = events.find((x) => x.type === t)!;
+    assert.ok(!("profile" in e) && !("result" in e), `${t} must be flat on the wire`);
+  }
+});
+
+test("score.updated sums to the report score, and the shared reducer agrees with the backend", async () => {
+  const dims: Record<string, number> = {};
+  for (const e of events.filter((x) => x.type === "score.updated")) dims[e.dimension] = e.points;
+  assert.equal(Object.keys(dims).length, 9, "all nine dimensions scored");
+  const report = events.find((e) => e.type === "report.ready")!;
+  assert.ok(Math.abs(Object.values(dims).reduce((a, b) => a + b, 0) - report.score) < 0.11);
+
+  const state = (await json(`${server.url}/runs/${runId}`)).body;
+  assert.equal(state.status, "complete");
+  assert.equal(state.score.total, report.score);
+  assert.equal(state.lastSeq, state.events.length);
+  const ui = reduceAll(runId, state.events);
+  assert.equal(ui.status, "complete");
+  assert.equal(ui.score.total, report.score);
+  assert.equal(ui.profile?.name, state.profile.name);
+  assert.equal(ui.findings.filter((f) => f.valid).length, state.findings.filter((f: any) => f.valid).length);
+  assert.ok(ui.report && ui.report.length > 50, "report text reaches the UI");
+});
+
+test("reconnect with Last-Event-ID replays only what was missed", async () => {
+  const last = events.at(-1)!.seq;
+  const tail = await collect(`${server.url}/runs/${runId}/events`, { headers: { "Last-Event-ID": String(last - 5) }, timeoutMs: 1500 });
+  assert.deepEqual(tail.slice(0, 5).map((e) => e.seq), [last - 4, last - 3, last - 2, last - 1, last]);
+});
+
+test("presence shows a viewer while connected", async () => {
+  let snapshot: string[] = [];
+  await collect(`${server.url}/runs/${runId}/events?name=phone-1`, {
+    timeoutMs: 3000,
+    onEvent: async (e) => {
+      if (e.type === "presence.join" && e.name === "phone-1") snapshot = (await json(`${server.url}/runs/${runId}`)).body.presence;
+    },
+    until: (e) => e.type === "presence.join" && e.name === "phone-1",
+  });
+  await new Promise((r) => setTimeout(r, 200));
+  assert.ok(snapshot.includes("phone-1"), "phone-1 present while connected");
+  await new Promise((r) => setTimeout(r, 500));
+  assert.ok(!(await json(`${server.url}/runs/${runId}`)).body.presence.includes("phone-1"), "phone-1 gone after disconnect");
+});
+
+test("actions are recorded as events", async () => {
+  const r = await postJson(`${server.url}/runs/${runId}/actions`, { type: "pin", findingId: "f1", by: "e2e" });
+  assert.deepEqual(r.body, { ok: true });
+  assert.equal((await postJson(`${server.url}/runs/${runId}/actions`, { type: "explode" })).status, 400);
+  const state = (await json(`${server.url}/runs/${runId}`)).body;
+  assert.ok(state.events.some((e: any) => e.type === "action" && e.action === "pin" && e.findingId === "f1"));
+});
+
+test("internal events need the bearer token and create unknown runs", async () => {
+  const bad = await postJson(`${server.url}/internal/events`, { runId: "stub1", events: [{ type: "agent.spawned" }] }, { Authorization: "Bearer wrong" });
+  assert.equal(bad.status, 401);
+  const ok = await postJson(
+    `${server.url}/internal/events`,
+    { runId: "stub1", events: [{ type: "agent.spawned", agentId: "a_stub_01", role: "orchestrator", model: "x" }, { type: "agent.working", agentId: "a_stub_01", file: "README.md" }] },
+    { Authorization: "Bearer e2e-token" },
+  );
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.seq, 3, "run.created + two events");
+  const state = (await json(`${server.url}/runs/stub1`)).body;
+  assert.equal(state.agents.length, 1);
+});
+
+test("key pool: weights by credit left, no secrets exposed", async () => {
+  const r = await fetch(`${server.url}/keys`);
+  const text = await r.text();
+  assert.ok(!text.includes("sk-fake"), "GET /keys must not leak keys");
+  const keys = JSON.parse(text);
+  assert.deepEqual(keys.map((k: any) => k.name), ["allen", "bergen", "akshay"]);
+  assert.ok(keys.every((k: any) => k.status === "ok" && k.spentUsd === 0), "mock runs spend nothing");
+});
+
+test("a restart restores every run from the event log", async () => {
+  const before = (await json(`${server.url}/runs/${runId}`)).body;
+  await server.stop();
+  server = await startServer(ENV);
+  const restored = (await json(`${server.url}/runs/${runId}`)).body;
+  assert.equal(restored.status, "complete");
+  assert.equal(restored.lastSeq, before.lastSeq);
+  assert.equal(restored.score.total, before.score.total);
+  const replay = await collect(`${server.url}/runs/${runId}/events`, { until: (_e, all) => all.length === before.events.length, timeoutMs: 3000 });
+  assert.deepEqual(replay.map((e) => e.seq), before.events.map((e: Ev) => e.seq), "SSE replays the full log after a restart");
+});

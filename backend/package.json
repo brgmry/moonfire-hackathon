@@ -9,7 +9,9 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "test": "tsx --test src/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "tsx --test e2e/mock.e2e.test.ts",
+    "e2e:real": "tsx --test --test-concurrency=1 e2e/real.e2e.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.1.0",

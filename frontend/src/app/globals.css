@@ -144,7 +144,7 @@ button{font-family:inherit}
 .report table.md th{font-family:var(--display);font-size:9px;text-align:left;border-bottom:1.5px solid var(--ink);padding:2px 4px}
 .report table.md td{padding:2px 4px;border-bottom:1px dotted #999;vertical-align:top}
 /* pitch page: pictures first, words last */
-.pitch{display:grid;grid-template-columns:1fr;gap:20px;max-width:860px;margin:0 auto;align-items:start}
+.pitch{display:grid;grid-template-columns:1fr;gap:20px;max-width:900px;margin:0 auto 70px;align-items:start;min-height:60vh;align-content:center}
 .pitch .h{font-family:var(--display);font-size:10px;letter-spacing:.06em;margin-bottom:6px}
 .pitch .huge{font-family:var(--display);font-size:30px;line-height:1.15;margin:0 0 14px;text-wrap:balance}
 .vs{display:grid;grid-template-columns:1fr 28px auto;gap:10px;align-items:center;margin-bottom:14px}
@@ -261,3 +261,15 @@ a.plain{color:inherit}
 .outcomes span:last-child{font-size:11px;color:#555}
 .chip.timer{font-variant-numeric:tabular-nums;min-width:62px;text-align:center}
 .dock .timer{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--phosphor)}
+.slidenav{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:var(--paper);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:4px 8px;z-index:20;font-family:var(--display);font-size:10px}
+.slidenav button{font-family:var(--display);font-size:12px;border:1.5px solid var(--ink);background:#fff;width:34px;height:26px;cursor:pointer}
+.slidenav button:disabled{color:#aaa;border-color:#aaa;cursor:default}
+.slidenav .counter{min-width:220px;text-align:center;font-variant-numeric:tabular-nums}
+.team em{font-style:normal;font-family:var(--display);font-size:8px;color:#777;letter-spacing:.04em}
+.par{margin-top:14px;display:grid;justify-items:center;gap:4px;text-align:center}
+.par b{font-family:var(--display);font-size:12px}
+.par span{font-size:10px;color:#555}
+.boxes{display:grid;grid-template-columns:repeat(12,10px);gap:3px}
+.boxes i{display:block;width:10px;height:10px;background:var(--ink);animation:spin 1.6s infinite}
+@keyframes spin{0%,100%{background:var(--ink)}50%{background:var(--good)}}
+@media (prefers-reduced-motion:reduce){.boxes i{animation:none}}

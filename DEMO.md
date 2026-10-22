@@ -1,19 +1,23 @@
 # The five-minute demo
 
-Site: https://shipitornot.com. Pitch: `/pitch`. Projector: add `?stage=1` to any run URL. Demo fallback: `/run/demo` (no backend).
+Site: https://shipitornot.com. Pitch: `/pitch`, a slideshow: right arrow or space for next, left for back, `#3` in the URL jumps to slide 3. Slides: 1 team, 2 why it matters, 3 why not another agent, 4 goal, 5 crew, 6 result, 7 autonomy. Projector: add `?stage=1` to any run URL. Demo fallback: `/run/demo` (no backend).
 
 Before walking up: open `/pitch` on the laptop, a run URL with `?stage=1` in a second tab, and `/run/demo` in a third. Phone on 4G with the site open. Laptop volume off.
 
-## 0:00 · Why it matters (Bergen, 20s)
-Screen: `/pitch`, top window.
+## 0:00 · Team (Bergen, 10s)
+Screen: `/pitch`, slide 1.
+> We're Bergen, Allen and Akshay. One founder, two UCL engineers, one evening.
+
+## 0:10 · Why it matters (Bergen, 20s)
+Screen: slide 2.
 > In the age of AI-written code, reading a repo tells you nothing. Running it does. Three people need that signal today: a VC before the term sheet, anyone hiring an engineer, and anyone benchmarking teams or coding agents.
 
-## 0:20 · Why not just another agent (Bergen, 20s)
-Screen: second window. Three tiles, one line each, before anyone asks.
+## 0:30 · Why not just another agent (Bergen, 20s)
+Screen: slide 3. Three tiles, one line each, before anyone asks.
 > Why not just hand the repo to Claude? Three things a chat can't do. Comparable: one rubric, every repo on the same scale. Verifiable: we built it and ran it, every point is a file, a line and a quote. Compounds: every run teaches the next and lands on a benchmark.
 
-## 0:40 · 01 The goal (Bergen, 40s)
-Screen: scroll to window 01.
+## 0:50 · 01 The goal (Bergen, 30s)
+Screen: slide 4.
 > Every README is a pitch deck. A VC gets a repo link and a README full of claims, and an associate spends two days working out what was actually shipped. In the AI age you can't tell good code from plausible code by reading it.
 >
 > We built a crew that reads the code, builds it, runs it, and scores it out of 100. Every point has a receipt: a file, a line, a quote. And a leaderboard of who wrote what.
@@ -23,7 +27,7 @@ Who benefits, one breath each: investors before the term sheet, anyone hiring en
 Close the beat with: a chat with an agent is an opinion. This is a measurement.
 
 ## 1:00 · 02 The crew (Allen, 60s)
-Screen: `/pitch`, window 02. Point at the sprites, top to bottom.
+Screen: slide 5. Point at the sprites, left to right.
 > One Cloud Run job per repo. The orchestrator clones, installs, splits the repo into chunks and spawns up to 24 explorers on Haiku, one per chunk. They return findings only: file, line, verbatim quote. A compiler builds it, a runner runs the tests, a claims agent checks the README against the code, git blame says who wrote what, and a classifier drops any finding the quote doesn't support.
 >
 > No agent is ever asked for a number. The backend computes the score from the findings with a fixed rubric.

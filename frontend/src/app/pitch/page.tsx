@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { ROLES, DIMENSIONS, type Role } from "@rvr/contract";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { Window } from "@/components/Window";
@@ -19,16 +20,26 @@ const SAMPLE: Record<string, number> = { claims: 16, runs: 14, compiles: 7, qual
 
 export default function Pitch() {
   const router = useRouter();
-  const menus: Menus = {
-    File: [{ label: "Run it live", onClick: () => router.push("/") }, { label: "Run the demo", onClick: () => router.push("/run/demo") }, { label: "Benchmark", onClick: () => router.push("/bench") }],
-    Edit: [{ label: "Copy site URL", onClick: () => { navigator.clipboard?.writeText(window.location.origin).catch(() => {}); } }],
-    Special: [{ label: "About README vs Reality", onClick: () => router.push("/") }],
-  };
   const R = 37, C = 2 * Math.PI * R, arc = C * 0.75;
-  return (
-    <div className="desk">
-      <MenuBar menus={menus} title="README vs Reality" />
-      <div className="pitch">
+  const titles = ["The team", "Why it matters", "Why · not just another agent", "01 · The goal", "02 · The crew", "03 · The result", "04 · The autonomy"];
+  const [idx, setIdx] = useState(0);
+  const go = useCallback((i: number) => { const n = Math.max(0, Math.min(titles.length - 1, i)); setIdx(n); try { history.replaceState(null, "", `#${n + 1}`); } catch { /* ignore */ } }, [titles.length]);
+  useEffect(() => { const h = Number(location.hash.replace("#", "")); if (h >= 1 && h <= titles.length) setIdx(h - 1); }, [titles.length]);
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); go(idx + 1); } if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(idx - 1); } if (e.key === "Home") go(0); if (e.key === "End") go(titles.length - 1); };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [idx, go, titles.length]);
+  const slides = [
+    (
+        <Window title="The team" className="p6" tip="built in one evening at Moonfire Build Night, 22 Oct 2026">
+          <div className="team">
+            <div data-tip="frontend, the Mac world, contract, benchmark, pitch"><Sprite role="orchestrator" frame="idle" scale={2.5} /><b>Bergen Merey</b><span><i className="badge yc" aria-label="Y Combinator">Y</i>YC founder</span><em>frontend · the Mac · pitch</em></div>
+            <div data-tip="backend, orchestrator, planner, explorers, claims, classifier, scoring"><Sprite role="explorer" frame="idle" scale={3} /><b>Allen Bridi</b><span><i className="badge ucl" aria-label="UCL">UCL</i>MSc Computer Science · founder of 3 startups</span><em>backend · the crew · scoring</em></div>
+            <div data-tip="Google Cloud, sandbox image and jobs, compile, run and git agents"><Sprite role="compiler" frame="idle" scale={3} /><b>Akshay Gujjula</b><span><i className="badge ucl" aria-label="UCL">UCL</i>2nd-year Computer Science · CTO, Vasmio</span><em>Google Cloud · sandboxes · build and run agents</em></div>
+          </div>
+        </Window>
+    ),
+    (
         <Window title="Why it matters" className="p0" tip="the real-world outcome">
           <p className="huge">Signal from the slop.</p>
           <div className="noise" aria-hidden="true">
@@ -41,6 +52,8 @@ export default function Pitch() {
             <div data-tip="one rubric, every repo: a benchmark for teams, agents and AI coding tools"><span className="ico">&lt;/&gt;</span><b>Benchmarks &amp; evals</b><span>comparable scores across repos</span></div>
           </div>
         </Window>
+    ),
+    (
         <Window title="Why · not just another agent" className="p5" tip="three reasons, hover for the argument">
           <div className="why">
             <div data-tip="one rubric, computed by code from findings. Same 100 for every repo, so a portfolio or a pipeline ranks on the same scale. An agent gives a different essay every time.">
@@ -67,6 +80,8 @@ export default function Pitch() {
             </div>
           </div>
         </Window>
+    ),
+    (
         <Window title="01 · The goal" className="p1" tip="the problem, and who benefits">
           <p className="huge">Every README<br />is a pitch deck.</p>
           <div className="vs">
@@ -89,7 +104,8 @@ export default function Pitch() {
             <div data-tip="Haiku explorers, cached prompts, Opus plans the split"><b>&lt;£1</b><span>per repo</span></div>
           </div>
         </Window>
-
+    ),
+    (
         <Window title="02 · The crew" className="p2" tip="hover a sprite for its job">
           <div className="flow">
             <div className="box job" data-tip="one disposable container per repo">
@@ -119,7 +135,8 @@ export default function Pitch() {
           </div>
           <div className="legend">findings only, never a score · file · line · quote</div>
         </Window>
-
+    ),
+    (
         <Window title="03 · The result" className="p3" tip="open the deliverable">
           <div className="result">
             <svg viewBox="0 0 92 92" aria-hidden="true" className="dial">
@@ -142,7 +159,8 @@ export default function Pitch() {
             <button type="button" onClick={() => router.push("/run/demo")} data-tip="a recorded run, replayed in the browser">run the demo</button>
           </div>
         </Window>
-
+    ),
+    (
         <Window title="04 · The autonomy" className="p4" tip="what ran itself, where a human touched it">
           <div className="auto">
             <div>
@@ -156,20 +174,34 @@ export default function Pitch() {
                 <li><span className="hand">✋</span>picked 3 demo repos</li>
                 <li><span className="hand">✋</span>&ldquo;demo&rdquo; = a recording</li>
               </ul>
+              <div className="par" data-tip="one Cloud Run job per repo, started on demand. Nothing shared, nothing queued behind anything else">
+                <div className="boxes" aria-hidden="true">{Array.from({ length: 48 }, (_, i) => <i key={i} style={{ animationDelay: `${(i % 12) * 0.08}s` }} />)}</div>
+                <b>1000s in parallel</b><span>one sandbox per repo, spun up on demand</span>
+              </div>
               <div className="lid" data-tip="close the laptops, the service keeps the run">
                 <div className="lap" /><span>lid closed · still running</span>
               </div>
             </div>
           </div>
         </Window>
-        <Window title="The team" className="p6" tip="built in one evening at Moonfire Build Night, 22 Oct 2026">
-          <div className="team">
-            <div data-tip="frontend, the Mac world, contract, benchmark, pitch"><Sprite role="orchestrator" frame="idle" scale={2.5} /><b>Bergen Merey</b><span><i className="badge yc" aria-label="Y Combinator">Y</i>YC founder</span></div>
-            <div data-tip="backend, orchestrator, planner, explorers, claims, classifier, scoring"><Sprite role="explorer" frame="idle" scale={3} /><b>Allen Bridi</b><span><i className="badge ucl" aria-label="UCL">UCL</i>MSc Computer Science · founder of 3 startups</span></div>
-            <div data-tip="Google Cloud, sandbox image and jobs, compile, run and git agents"><Sprite role="compiler" frame="idle" scale={3} /><b>Akshay Gujjula</b><span><i className="badge ucl" aria-label="UCL">UCL</i>2nd-year Computer Science · CTO, Vasmio</span></div>
-          </div>
-        </Window>
+    )
+  ];
+  const menus: Menus = {
+    File: [{ label: "Run it live", onClick: () => router.push("/") }, { label: "Run the demo", onClick: () => router.push("/run/demo") }, { label: "Benchmark", onClick: () => router.push("/bench") }, { sep: true, label: "" }, { label: "First slide", onClick: () => go(0) }, { label: "Last slide", onClick: () => go(titles.length - 1) }],
+    Edit: [{ label: "Copy site URL", onClick: () => { navigator.clipboard?.writeText(window.location.origin).catch(() => {}); } }],
+    Special: [{ label: "About README vs Reality", onClick: () => router.push("/") }],
+  };
+  return (
+    <div className="desk">
+      <MenuBar menus={menus} title="README vs Reality" />
+      <div className="pitch">
+        {slides[idx]}
       </div>
+      <nav className="slidenav" aria-label="slides">
+        <button type="button" onClick={() => go(idx - 1)} disabled={idx === 0} data-tip="left arrow">◀</button>
+        <span className="counter"><b>{idx + 1}</b> / {titles.length} · {titles[idx]}</span>
+        <button type="button" onClick={() => go(idx + 1)} disabled={idx === titles.length - 1} data-tip="right arrow or space">▶</button>
+      </nav>
     </div>
   );
 }

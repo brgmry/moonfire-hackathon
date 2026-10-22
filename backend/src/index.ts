@@ -41,10 +41,46 @@ app.get("/runs", (c) =>
   c.json(listRuns().map((s) => ({ id: s.id, repoUrl: s.repoUrl, status: s.status, score: s.score.total, lastSeq: s.lastSeq }))),
 );
 
+// Whatever a person pastes from GitHub (a ?tab= link, a file under /blob/, an issue, /tree/<ref>/sub/dir,
+// http, no scheme) becomes https://github.com/<owner>/<repo>, plus /tree/<ref> or #<sha> when pinned.
+export function normalizeRepoUrl(raw: string): { url: string; owner: string; repo: string } | null {
+  let u: URL;
+  try {
+    u = new URL(/^[a-z]+:\/\//i.test(raw.trim()) ? raw.trim() : `https://${raw.trim()}`);
+  } catch {
+    return null;
+  }
+  if (!/^(www\.)?github\.com$/i.test(u.hostname)) return null;
+  const [owner, repoSeg, kind, ref] = u.pathname.split("/").filter(Boolean);
+  if (!owner || !repoSeg) return null;
+  let [repo, atRef] = repoSeg.replace(/\.git$/i, "").split("@");
+  if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) return null;
+  const hashSha = /^#[0-9a-f]{7,40}$/i.test(u.hash) ? u.hash.slice(1) : undefined;
+  const pin = hashSha ?? atRef ?? (["tree", "commit", "blob"].includes(kind ?? "") ? ref : undefined);
+  const base = `https://github.com/${owner}/${repo}`;
+  const url = !pin ? base : /^[0-9a-f]{7,40}$/i.test(pin) ? `${base}#${pin}` : `${base}/tree/${pin}`;
+  return { url, owner, repo };
+}
+
+// 404 means missing or private: say so now instead of a sandbox failing to clone. Rate limits pass.
+async function repoExists(owner: string, repo: string): Promise<boolean> {
+  try {
+    const headers: Record<string, string> = { "User-Agent": "crew" };
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers, signal: AbortSignal.timeout(3000) });
+    return r.status !== 404;
+  } catch {
+    return true;
+  }
+}
+
 app.post("/runs", async (c) => {
   const body = await c.req.json().catch(() => ({}));
-  const repoUrl = String(body.repoUrl ?? "").trim();
-  if (!/^https:\/\/github\.com\/[^/]+\/[^/]+/.test(repoUrl)) return c.json({ error: "repoUrl must be https://github.com/<owner>/<repo>" }, 400);
+  const parsed = normalizeRepoUrl(String(body.repoUrl ?? ""));
+  if (!parsed) return c.json({ error: "paste a GitHub repo link, like https://github.com/owner/repo" }, 400);
+  if (process.env.RUNNER !== "mock" && !(await repoExists(parsed.owner, parsed.repo)))
+    return c.json({ error: `github.com/${parsed.owner}/${parsed.repo} was not found, or it is private` }, 400);
+  const repoUrl = parsed.url;
   const id = newRunId();
   const run = createRun(id, repoUrl, body.by);
   appendEvent(id, { type: "run.created", repoUrl, by: body.by ?? "anon" });
@@ -139,6 +175,8 @@ app.post("/runs/:id/actions", async (c) => {
   return c.json({ ok: true });
 });
 
+const BACKEND_ONLY = new Set(["run.created", "presence.join", "presence.leave", "sandbox.started", "score.updated", "report.ready", "memory.hit", "run.finished", "action"]);
+
 app.post("/internal/events", async (c) => {
   if (c.req.header("Authorization") !== `Bearer ${INTERNAL_TOKEN}`) return c.json({ error: "unauthorized" }, 401);
   const body = await c.req.json().catch(() => null);
@@ -148,9 +186,12 @@ app.post("/internal/events", async (c) => {
     createRun(body.runId, "");
     appendEvent(body.runId, { type: "run.created", repoUrl: body.events.find((e: any) => e.repoUrl)?.repoUrl ?? "", by: "sandbox" });
   }
+  // The sandbox runs untrusted code: it may report what it saw, never the score, the report or the outcome.
   let seq = 0;
   for (const e of body.events) {
-    if (e && typeof e.type === "string") seq = appendEvent(body.runId, e).seq;
+    if (!e || typeof e.type !== "string" || BACKEND_ONLY.has(e.type)) continue;
+    if (e.type === "finding.dropped" && !["quote_not_found", "classifier_disagreed"].includes(e.reason)) continue;
+    seq = appendEvent(body.runId, e).seq;
   }
   return c.json({ ok: true, seq });
 });

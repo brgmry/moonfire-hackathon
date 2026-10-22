@@ -17,6 +17,7 @@ type Run = {
   finishing: boolean;
   timedOut: boolean;
   primaryKey?: string;
+  partialReason?: string;
 };
 
 const runs = new Map<string, Run>();
@@ -88,6 +89,12 @@ function react(run: Run, e: Event) {
   }
   if (e.type === "key.exhausted" && e.key) markExhausted(e.key, e.error ?? "reported by the sandbox");
 
+  // The sandbox could not do the job (clone failed) or ran out of time: say so in the outcome.
+  if (e.type === "sandbox.failed") {
+    if (e.fatal) void finish(run, String(e.reason ?? "sandbox failed"), "failed");
+    else run.partialReason = String(e.reason ?? "sandbox stopped early");
+  }
+
   if (e.type === "finding.added") {
     const reason = validateFinding(run.state, e.finding);
     if (reason) appendEvent(id, { type: "finding.dropped", findingId: e.finding.id, reason });
@@ -127,12 +134,19 @@ function allAgentsDone(s: RunState): boolean {
   return s.agents.every((a) => a.status === "done");
 }
 
-export async function finish(run: Run, reason?: string) {
+export async function finish(run: Run, reason?: string, forced?: "failed") {
   if (run.finishing || ["complete", "partial", "failed"].includes(run.state.status)) return;
   run.finishing = true;
   clearTimeout(run.timeout);
   clearTimeout(run.doneCheck);
   const id = run.state.id;
+  if (forced === "failed") {
+    // Nothing was reviewed, so no report to write and nothing to bill.
+    appendEvent(id, { type: "run.finished", status: "failed", reason });
+    run.finishing = false;
+    return;
+  }
+  reason = reason ?? run.partialReason;
   try {
     rescore(run);
     const writerId = "a_writer_01";

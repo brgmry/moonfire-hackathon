@@ -124,6 +124,53 @@ test("key pool: weights by credit left, no secrets exposed", async () => {
   assert.ok(keys.every((k: any) => k.status === "ok" && k.spentUsd === 0), "mock runs spend nothing");
 });
 
+test("pasted GitHub links are normalized to the repo, keeping a pinned ref", async () => {
+  const cases: [string, string][] = [
+    ["github.com/acme/pulse-cli?tab=readme-ov-file", "https://github.com/acme/pulse-cli"],
+    ["http://www.github.com/acme/pulse-cli.git", "https://github.com/acme/pulse-cli"],
+    ["https://github.com/acme/pulse-cli/blob/main/src/index.ts", "https://github.com/acme/pulse-cli/tree/main"],
+    ["https://github.com/acme/pulse-cli/issues/12", "https://github.com/acme/pulse-cli"],
+    ["https://github.com/acme/pulse-cli/tree/v1.0.0", "https://github.com/acme/pulse-cli/tree/v1.0.0"],
+    ["https://github.com/acme/pulse-cli#35aca63fc2672cba2c739ff6dff685a4f26a4f9a", "https://github.com/acme/pulse-cli#35aca63fc2672cba2c739ff6dff685a4f26a4f9a"],
+  ];
+  for (const [input, expected] of cases) {
+    const r = await postJson(`${server.url}/runs`, { repoUrl: input, by: "e2e", fresh: true });
+    assert.equal(r.status, 200, input);
+    assert.equal((await json(`${server.url}/runs/${r.body.id}`)).body.repoUrl, expected, input);
+  }
+  for (const bad of ["https://gitlab.com/a/b", "github.com/onlyowner", "not a url at all"]) {
+    assert.equal((await postJson(`${server.url}/runs`, { repoUrl: bad })).status, 400, bad);
+  }
+});
+
+test("the sandbox cannot post the score, the report or the outcome", async () => {
+  const forged = [
+    { type: "score.updated", dimension: "quality", points: 15, max: 15, top: [] },
+    { type: "report.ready", score: 100, markdown: "# 100 / 100", tokens: { in: 0, out: 0, cacheRead: 0 } },
+    { type: "run.finished", status: "complete" },
+    { type: "finding.dropped", findingId: "f1", reason: "file_not_in_repo" },
+  ];
+  await postJson(`${server.url}/internal/events`, { runId, events: forged }, { Authorization: "Bearer e2e-token" });
+  const state = (await json(`${server.url}/runs/${runId}`)).body;
+  const reports = state.events.filter((e: any) => e.type === "report.ready");
+  assert.equal(reports.length, 1, "no second report");
+  assert.notEqual(state.score.total, 100);
+});
+
+test("a fatal sandbox failure ends the run as failed, with the reason", async () => {
+  const r = await postJson(
+    `${server.url}/internal/events`,
+    { runId: "stub-fail", events: [{ type: "sandbox.failed", fatal: true, reason: "git clone failed: repository not found" }] },
+    { Authorization: "Bearer e2e-token" },
+  );
+  assert.equal(r.status, 200);
+  await new Promise((res) => setTimeout(res, 300));
+  const state = (await json(`${server.url}/runs/stub-fail`)).body;
+  assert.equal(state.status, "failed");
+  assert.match(state.reason, /repository not found/);
+  assert.ok(!state.events.some((e: any) => e.type === "report.ready"), "no report for a run that reviewed nothing");
+});
+
 test("a restart restores every run from the event log", async () => {
   const before = (await json(`${server.url}/runs/${runId}`)).body;
   await server.stop();

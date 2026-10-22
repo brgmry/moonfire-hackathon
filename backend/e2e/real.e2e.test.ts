@@ -102,6 +102,12 @@ test("the same commit again replays from memory without a sandbox", { timeout: 1
   assert.ok(Math.abs(first - second) < 0.11, `memory replay scored ${second}, the original ${first}`);
 });
 
+test("a repo that does not exist is refused up front", async () => {
+  const r = await postJson(`${api}/runs`, { repoUrl: "https://github.com/this-owner-does-not-exist-9f2c/nope", by: "e2e" });
+  assert.equal(r.status, 400);
+  assert.match(r.body.error, /not found/);
+});
+
 test("the run page loads", { skip: !process.env.E2E_WEB_URL }, async () => {
   const r = await fetch(`${process.env.E2E_WEB_URL!.replace(/\/$/, "")}/run/${runId}`);
   assert.equal(r.status, 200);

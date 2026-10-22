@@ -1,0 +1,11 @@
+# Sandbox image build context: only sandbox/ and infra/ are needed.
+.git
+.gitignore
+frontend/
+node_modules/
+**/node_modules/
+**/__pycache__/
+docs/
+assets/
+specs/
+comms/

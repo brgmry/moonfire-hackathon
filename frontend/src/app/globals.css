@@ -274,3 +274,13 @@ a.plain{color:inherit}
 @keyframes spin{0%,100%{background:var(--ink)}50%{background:var(--good)}}
 @media (prefers-reduced-motion:reduce){.boxes i{animation:none}}
 .badge.bath{height:18px;padding:0 5px;background:#0f4c81;color:#fff;font-size:9px;letter-spacing:.04em}
+.loginwrap{display:grid;justify-items:center;gap:18px;max-width:520px;margin:0 auto}
+.loginmac{width:260px}
+.loginmac .macwrap{transform:none}
+.screen.locked{display:grid;place-items:center;font-size:40px}
+.login{display:grid;gap:8px}
+.login label{font-family:var(--display);font-size:10px}
+.login input{font-family:var(--mono);font-size:13px;border:2px solid var(--ink);padding:6px 8px;background:#fff;width:100%}
+.login button{font-family:var(--display);font-size:11px;border:2px solid var(--ink);background:var(--ink);color:#fff;padding:6px 14px;cursor:pointer;justify-self:start}
+.login button:disabled{opacity:.5;cursor:default}
+.login .err{color:var(--bad);font-size:11px}

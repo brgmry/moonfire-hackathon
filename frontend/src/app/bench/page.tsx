@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DIMENSIONS, fromServerState, type Dimension, type RunState } from "@rvr/contract";
-import { API, viewerName } from "@/lib/api";
+import { API, authHeaders, viewerName } from "@/lib/api";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { Window } from "@/components/Window";
 
@@ -23,11 +23,11 @@ export default function Bench() {
 
   const load = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/runs`); if (!r.ok) return;
+      const r = await fetch(`${API}/runs`, { headers: authHeaders() }); if (!r.ok) return;
       const list = (await r.json()) as Row[];
       const want = list.filter((x) => x.status !== "created" && !detailsRef.current[x.id]).slice(0, 120);
       let i = 0;
-      await Promise.all(Array.from({ length: 6 }, async () => { while (i < want.length) { const x = want[i++]; try { const d = await fetch(`${API}/runs/${x.id}`); if (d.ok) detailsRef.current[x.id] = fromServerState(await d.json(), x.id); } catch { /* skip */ } } }));
+      await Promise.all(Array.from({ length: 6 }, async () => { while (i < want.length) { const x = want[i++]; try { const d = await fetch(`${API}/runs/${x.id}`, { headers: authHeaders() }); if (d.ok) detailsRef.current[x.id] = fromServerState(await d.json(), x.id); } catch { /* skip */ } } }));
       setRows(list.map((x) => ({ ...x, score: Number(x.score) || 0, detail: detailsRef.current[x.id] })));
     } catch { /* backend away */ }
   }, []);
@@ -55,7 +55,7 @@ export default function Bench() {
     const todo = repos.filter((r) => !already.has(short(r.url))).slice(0, queue.n);
     setQueue((s) => ({ ...s, total: todo.length, done: 0, running: true, armed: false }));
     let i = 0, finished = 0;
-    await Promise.all(Array.from({ length: 2 }, async () => { while (i < todo.length) { const r = todo[i++]; try { await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl: r.url, by: `bench/${viewerName()}` }) }); } catch { /* skip */ } finished++; setQueue((s) => ({ ...s, done: finished })); await new Promise((res) => setTimeout(res, 4000)); } }));
+    await Promise.all(Array.from({ length: 2 }, async () => { while (i < todo.length) { const r = todo[i++]; try { await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ repoUrl: r.url, by: `bench/${viewerName()}` }) }); } catch { /* skip */ } finished++; setQueue((s) => ({ ...s, done: finished })); await new Promise((res) => setTimeout(res, 4000)); } }));
     setQueue((s) => ({ ...s, running: false })); setToast(`${todo.length} queued`); setTimeout(() => setToast(""), 2000); load();
   };
 

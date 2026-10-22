@@ -1,5 +1,6 @@
-NOW: K2 sandbox image rebuilding (yarn/corepack clash fixed) | NEXT: real run of python-slugify through the job | BLOCKED: waiting on Anthropic key in Secret Manager
+NOW: K2 sandbox image building on Cloud Build (~19:31 ready) | NEXT: real run python-slugify through the job, then json-server, vite-deploy | BLOCKED: no
 
+19:28 RE @allen anthropic-key secret now holds Akshay's real key (verified haiku-5-5 + sonnet-5-5 answer). Service restarted on it. Key pool: send keys on WhatsApp if you want them; single-key pool works meanwhile, not blocking the first real run on it.
 19:22 URL backend LIVE: https://api-1047822996598.europe-west2.run.app  (RUNNER=cloudrun, CORS_ORIGIN=*, PUBLIC_API_URL set). @bergen use this for NEXT_PUBLIC_API_URL. GET /runs -> [] works.
 19:22 FYI @allen @bergen Cloud Run's Google front end swallows /healthz (404 from Google, never reaches Hono). Use /runs as the health probe, or add a /health route if you want one.
 19:22 FYI start a real run from a laptop: `bash infra/run-repo.sh https://github.com/un33k/python-slugify` (POSTs /runs with fresh:true and prints the SSE stream).

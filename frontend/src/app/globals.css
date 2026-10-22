@@ -98,3 +98,48 @@ button{font-family:inherit}
 .home input{font-family:var(--mono);font-size:13px;border:2px solid var(--ink);padding:6px 8px;background:#fff;width:100%}
 .home .err{color:var(--bad);font-size:11px}
 @media (prefers-reduced-motion:reduce){.av,.row .bar i{transition:none}.av.found,.boot .cur,.bub{animation:none}}
+
+/* menus */
+.menu{position:relative}
+.mtitle{border:0;background:none;font:inherit;padding:1px 6px;cursor:pointer;color:inherit}
+.menu.open .mtitle{background:var(--ink);color:#fff}
+.dropdown{position:absolute;left:0;top:calc(100% + 4px);min-width:220px;background:var(--paper);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);z-index:30;padding:3px 0;font-family:var(--mono);font-size:12px}
+.dropdown button{display:flex;gap:4px;width:100%;border:0;background:none;text-align:left;padding:4px 10px 4px 6px;cursor:pointer;font:inherit;color:inherit}
+.dropdown button:hover:not(:disabled),.dropdown button:focus-visible{background:var(--ink);color:#fff;outline:0}
+.dropdown button:disabled{color:#999;cursor:default}
+.dropdown .chk{width:12px;flex:none}
+.dropdown hr{border:0;border-top:1px dotted #777;margin:3px 0}
+.menubar .logo{border:0;padding:0;cursor:pointer}
+.chip.off{background:#fff;color:#999;border-style:dotted}
+/* tooltips, balloon-help style */
+[data-tip]{position:relative}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:40;background:#fff;color:var(--ink);border:1.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);padding:4px 7px;font:11px/1.3 var(--mono);white-space:normal;width:max-content;max-width:240px;pointer-events:none;text-transform:none;letter-spacing:0}
+.menubar [data-tip]:hover::after{top:calc(100% + 8px)}
+.rows [data-tip]:hover::after{left:92px;top:auto;bottom:calc(100% + 2px)}
+.tile[title]{cursor:pointer;font:inherit;text-align:left;color:rgba(201,242,192,.8)}
+.tile.sel{border-color:#fff;border-width:2px;background:rgba(201,242,192,.18)}
+.screen.nogrid{background-image:none}
+.screen.off{background:#000;background-image:none;cursor:pointer}
+.screen.off .boot{color:#6c6}
+.clickable{cursor:pointer}
+.f.clickable:hover{background:#fff}
+.board tr.clickable:hover td{background:#fff}
+.linkbtn{border:0;background:none;font:inherit;font-size:10px;text-decoration:underline;cursor:pointer;padding:0;color:inherit;margin:0 0 6px}
+/* desktop icons */
+.icons{position:fixed;right:max(12px,env(safe-area-inset-right,0px));top:70px;display:grid;gap:14px;z-index:5}
+.icon{border:0;background:none;display:grid;justify-items:center;gap:2px;cursor:pointer;font-family:var(--display);font-size:9px;color:var(--ink);padding:4px}
+.icon .glyph{background:var(--paper);border:1.5px solid var(--ink);padding:2px;box-shadow:2px 2px 0 var(--ink)}
+.icon .lbl{background:rgba(255,255,255,.85);padding:0 3px}
+.icon:hover .glyph,.icon:focus-visible .glyph{background:var(--ink)}
+.icon:hover .glyph rect,.icon:focus-visible .glyph rect{fill:#fff}
+.icon:focus-visible{outline:2px solid var(--ink)}
+.icon [data-tip]:hover::after,.icon:hover::after{left:auto;right:0}
+@media (max-width:1100px){.icons{position:static;grid-auto-flow:column;justify-content:center;margin:12px 0 0}}
+/* chip + toast */
+.filterchip{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--paper);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:3px 6px 3px 10px;font-family:var(--display);font-size:10px;display:flex;gap:8px;align-items:center;z-index:20}
+.filterchip button{border:0;background:none;font:inherit;font-size:14px;cursor:pointer;line-height:1}
+.toast{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:5px 10px;font-family:var(--display);font-size:10px;z-index:21;animation:fade 1.8s forwards}
+.report h3,.report h4{font-family:var(--display);font-size:12px;margin:0 0 8px}
+.report table.md{border-collapse:collapse;font-size:11px;margin:0 0 10px;width:100%}
+.report table.md th{font-family:var(--display);font-size:9px;text-align:left;border-bottom:1.5px solid var(--ink);padding:2px 4px}
+.report table.md td{padding:2px 4px;border-bottom:1px dotted #999;vertical-align:top}

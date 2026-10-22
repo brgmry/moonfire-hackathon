@@ -601,8 +601,9 @@ BEZEL = "#3A3A3A"
 SLOT = "#6A6A6A"
 SCREEN_FILL = "#2B2B2B"
 
-# screen rect in units
-SCREEN_U = (18, 12, 64, 44)
+YOFF = 0  # vertical shift of the whole body in units (frontend hard-codes top:10%, keep 0)
+# screen rect in units (YOFF already applied)
+SCREEN_U = (18, 12 + YOFF, 64, 44)
 SCREEN_PX = tuple(v * U for v in SCREEN_U)
 
 
@@ -611,7 +612,7 @@ def mac_svg():
 
     def rect(x, y, w, h, fill, extra=""):
         r.append(
-            f'  <rect x="{x*U}" y="{y*U}" width="{w*U}" height="{h*U}" fill="{fill}"{extra}/>'
+            f'  <rect x="{x*U}" y="{(y+YOFF)*U}" width="{w*U}" height="{h*U}" fill="{fill}"{extra}/>'
         )
 
     # body outline, pixel-rounded corners
@@ -634,7 +635,7 @@ def mac_svg():
     rect(16, 10, 68, 49, BEZEL)
     # the screen: a single rect with id="screen"
     sx, sy, sw, sh = SCREEN_U
-    rect(sx, sy, sw, sh, SCREEN_FILL, ' id="screen"')
+    rect(sx, sy - YOFF, sw, sh, SCREEN_FILL, ' id="screen"')
     # badge: plain rectangle, no logo
     rect(18, 63, 10, 3, BLACK)
     rect(19, 64, 8, 1, BEIGE_DARK)

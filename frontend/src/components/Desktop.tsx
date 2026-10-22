@@ -67,6 +67,7 @@ export function Desktop({ id }: { id: string }) {
       { label: off ? "Wake up" : "Shut down", tip: "the Mac, not the crew", onClick: () => setOff((o) => !o) },
       { sep: true, label: "" },
       { label: "Empty trash", tip: "nothing in it, like every Mac ever", onClick: () => say("the trash is already empty") },
+      { label: "The pitch", tip: "goal, crew, result, autonomy", onClick: () => router.push("/pitch") },
       { label: "About README vs Reality", onClick: () => show("about") },
     ],
   };

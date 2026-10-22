@@ -143,3 +143,19 @@ button{font-family:inherit}
 .report table.md{border-collapse:collapse;font-size:11px;margin:0 0 10px;width:100%}
 .report table.md th{font-family:var(--display);font-size:9px;text-align:left;border-bottom:1.5px solid var(--ink);padding:2px 4px}
 .report table.md td{padding:2px 4px;border-bottom:1px dotted #999;vertical-align:top}
+/* pitch page */
+.pitch{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"p1 p2" "p3 p2" "p4 p2";gap:16px;max-width:1180px;margin:0 auto;align-items:start}
+@media (max-width:900px){.pitch{grid-template-columns:1fr;grid-template-areas:"p1" "p2" "p3" "p4"}}
+.p1{grid-area:p1}.p2{grid-area:p2}.p3{grid-area:p3}.p4{grid-area:p4}
+.pitch p{margin:0 0 10px;line-height:1.5;max-width:60ch;font-size:12.5px}
+.pitch .big{font-family:var(--display);font-size:20px;line-height:1.2;margin-bottom:12px;text-wrap:balance}
+.crew{display:grid;gap:10px;margin-top:6px}
+.crewrow{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start}
+.crewrow .av{position:static}
+.crewrow .role{font-family:var(--display);font-size:11px}
+.crewrow .does{font-size:11.5px;line-height:1.4}
+.scorer{width:32px;height:32px;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:10px;background:#fff}
+.ctas{display:flex;gap:8px;flex-wrap:wrap}
+.ctas button{font-family:var(--display);font-size:10px;border:1.5px solid var(--ink);background:#fff;padding:4px 10px;cursor:pointer}
+.ctas button:first-child{background:var(--ink);color:#fff}
+a.plain{color:inherit}

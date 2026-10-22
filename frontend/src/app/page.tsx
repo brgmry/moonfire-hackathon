@@ -21,7 +21,7 @@ export default function Home() {
   const menus: Menus = {
     File: [{ label: "Run the demo", tip: "the fixture run, no backend needed", onClick: () => router.push("/run/demo") }],
     Edit: [{ label: "Paste", tip: "paste a github.com URL into the box", onClick: () => navigator.clipboard?.readText().then(setUrl).catch(() => setErr("clipboard blocked, paste by hand")) }],
-    Special: [{ label: "About README vs Reality", onClick: () => setErr("every README is a pitch deck. we read the code, build it, run it, score it.") }],
+    Special: [{ label: "The pitch", tip: "goal, crew, result, autonomy", onClick: () => router.push("/pitch") }, { label: "About README vs Reality", onClick: () => setErr("every README is a pitch deck. we read the code, build it, run it, score it.") }],
   };
   return (
     <div className="desk">
@@ -39,6 +39,7 @@ export default function Home() {
               <button type="button" onClick={() => router.push("/run/demo")} data-tip="a scripted run, no backend needed">run the demo</button>
             </div>
             {err && <div className="err">{err}</div>}
+            <div className="empty"><a href="/pitch" className="plain">the pitch</a> · goal, crew, result, autonomy</div>
           </form>
         </Window>
       </div>

@@ -1,20 +1,21 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { ROLES, type Role } from "@rvr/contract";
+import { ROLES, DIMENSIONS, type Role } from "@rvr/contract";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { Window } from "@/components/Window";
 import { Sprite } from "@/components/Sprite";
 
-const CREW: Record<Role, { model: string; where: string; does: string }> = {
-  orchestrator: { model: "Sonnet 5.5", where: "Cloud Run job", does: "clones the repo, installs it, splits it into chunks, spawns everyone else" },
-  explorer: { model: "Haiku 5.5, up to 24 at once", where: "Cloud Run job", does: "reads one chunk, returns findings as file, line, verbatim quote, no prose" },
-  claims: { model: "Haiku 5.5", where: "Cloud Run job", does: "lists every README claim, marks it delivered, partial or missing against the code" },
-  compiler: { model: "Sonnet 5.5", where: "Cloud Run job", does: "builds it, reports time, size and warnings" },
-  runner: { model: "Sonnet 5.5", where: "Cloud Run job", does: "runs the tests or hits the documented endpoints" },
-  git: { model: "no model", where: "Cloud Run job", does: "git blame and shortlog, bots dropped, who wrote which chunk" },
-  classifier: { model: "Haiku 5.5", where: "Cloud Run job", does: "re-labels every finding from fixed enums, drops any the quote does not support" },
-  writer: { model: "Sonnet 5.5", where: "Cloud Run service", does: "one sentence per dimension, each must cite a file or it is cut" },
+const CREW: Record<Role, { model: string; does: string }> = {
+  orchestrator: { model: "sonnet", does: "clones, installs, chunks, spawns the rest" },
+  explorer: { model: "haiku ×24", does: "reads one chunk, returns file, line, quote" },
+  claims: { model: "haiku", does: "README claim: delivered, partial or missing" },
+  compiler: { model: "sonnet", does: "builds it: time, size, warnings" },
+  runner: { model: "sonnet", does: "runs the tests, hits the endpoints" },
+  git: { model: "no model", does: "git blame: who wrote which chunk" },
+  classifier: { model: "haiku", does: "drops any finding the quote does not support" },
+  writer: { model: "sonnet", does: "one sentence per dimension, must cite a file" },
 };
+const SAMPLE: Record<string, number> = { claims: 16, runs: 14, compiles: 7, quality: 13, architecture: 9, tests: 10, dead_code: 4, security: 3, docs: 4 };
 
 export default function Pitch() {
   const router = useRouter();
@@ -23,51 +24,110 @@ export default function Pitch() {
     Edit: [{ label: "Copy site URL", onClick: () => { navigator.clipboard?.writeText(window.location.origin).catch(() => {}); } }],
     Special: [{ label: "About README vs Reality", onClick: () => router.push("/") }],
   };
+  const R = 37, C = 2 * Math.PI * R, arc = C * 0.75;
   return (
     <div className="desk">
       <MenuBar menus={menus} title="README vs Reality" />
       <div className="pitch">
-        <Window title="01 · The goal" className="p1" tip="explain the problem and who benefits">
-          <p className="big">Every README is a pitch deck.</p>
-          <p>A VC gets a repo link and a README full of claims. The associate has two days and no way to tell shipped from promised, or good code from generated code.</p>
-          <p><b>Who benefits.</b> Investors doing technical diligence: call the bullshit on the tech before the term sheet. Anyone hiring or acquiring engineers: the repo is the only honest signal left, and in the AI age you cannot tell good from plausible by reading it. The engineer who actually did the work: the leaderboard says so.</p>
-          <p><b>The result is a number with receipts.</b> A score out of 100 where every point traces to a file, a line and a quote, and a leaderboard of who wrote what.</p>
-        </Window>
-
-        <Window title="02 · The crew" className="p2" tip="the agents, their roles, and where they actually run">
-          <p>One Cloud Run job per repo. The orchestrator spawns the crew inside it; every agent streams events to a Cloud Run service that holds the run, computes the score and fans it out to every phone with the URL.</p>
-          <div className="crew">
-            {ROLES.map((r) => (
-              <div key={r} className="crewrow" data-tip={CREW[r].does}>
-                <Sprite role={r} frame="idle" scale={r === "orchestrator" ? 1.5 : 2} />
-                <div>
-                  <div className="role">{r} <span className="empty">{CREW[r].model} · {CREW[r].where}</span></div>
-                  <div className="does">{CREW[r].does}</div>
-                </div>
-              </div>
-            ))}
-            <div className="crewrow" data-tip="no model, pure arithmetic">
-              <div className="scorer" aria-hidden="true">100</div>
-              <div>
-                <div className="role">scorer <span className="empty">no model · Cloud Run service</span></div>
-                <div className="does">computes the 100 from findings with a fixed rubric. No agent is ever asked for a number.</div>
-              </div>
+        <Window title="01 · The goal" className="p1" tip="the problem, and who benefits">
+          <p className="huge">Every README<br />is a pitch deck.</p>
+          <div className="vs">
+            <div className="readme" data-tip="what the README says">
+              <div className="h">README.md</div>
+              <div><span className="st delivered">delivered</span> one-command install</div>
+              <div><span className="st partial">partial</span> OAuth with Google and GitHub</div>
+              <div><span className="st missing">missing</span> plugin system with hot reload</div>
+              <div><span className="st partial">partial</span> 100% test coverage</div>
             </div>
+            <div className="arrow" aria-hidden="true">→</div>
+            <div className="num" data-tip="every point traces to a file, a line and a quote">
+              <div className="big">80</div>
+              <div className="sub">/100, with receipts</div>
+            </div>
+          </div>
+          <div className="who">
+            <div data-tip="technical diligence before the term sheet"><span className="ico">VC</span>diligence</div>
+            <div data-tip="the repo is the only honest signal of skill left"><span className="ico">HR</span>hiring</div>
+            <div data-tip="the leaderboard says who did the work"><span className="ico">&lt;/&gt;</span>the engineer</div>
+          </div>
+          <div className="stats">
+            <div data-tip="what an associate spends on one repo"><b>2 days</b><span>associate</span></div>
+            <div data-tip="one run on Cloud Run"><b>4 min</b><span>the crew</span></div>
+            <div data-tip="Haiku explorers, cached prompts"><b>40p</b><span>per repo</span></div>
           </div>
         </Window>
 
-        <Window title="03 · The result" className="p3" tip="open the deliverable and show it works">
-          <p>Paste a repo. Watch the crew in the Mac. Tap any score row and read the evidence: the README line, the file, the quote. Then the leaderboard: who wrote the best chunk and who wrote the dead code.</p>
+        <Window title="02 · The crew" className="p2" tip="hover a sprite for its job">
+          <div className="flow">
+            <div className="box job" data-tip="one disposable container per repo">
+              <div className="h">Cloud Run job</div>
+              <div className="sprites">
+                {ROLES.filter((r) => r !== "writer").map((r) => (
+                  <div key={r} className="sp" data-tip={`${CREW[r].does} (${CREW[r].model})`}>
+                    <Sprite role={r} frame="idle" scale={r === "orchestrator" ? 2 : 2.5} />
+                    <span>{r}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="arrow" aria-hidden="true">→</div>
+            <div className="box svc" data-tip="always on, holds every run">
+              <div className="h">Cloud Run service</div>
+              <div className="sprites">
+                <div className="sp" data-tip="computes the score from findings with a fixed rubric. No agent is asked for a number"><span className="scorer">100</span><span>scorer</span></div>
+                <div className="sp" data-tip={`${CREW.writer.does} (${CREW.writer.model})`}><Sprite role="writer" frame="idle" scale={2.5} /><span>writer</span></div>
+              </div>
+            </div>
+            <div className="arrow" aria-hidden="true">→</div>
+            <div className="box phones" data-tip="one URL, every phone sees the same run">
+              <div className="h">every phone</div>
+              <div className="phone"><div className="pscreen" /></div>
+            </div>
+          </div>
+          <div className="legend">findings only, never a score · file · line · quote</div>
+        </Window>
+
+        <Window title="03 · The result" className="p3" tip="open the deliverable">
+          <div className="result">
+            <svg viewBox="0 0 92 92" aria-hidden="true" className="dial">
+              <rect x="1" y="1" width="90" height="90" fill="none" stroke="#141414" strokeWidth="2" />
+              <circle cx="46" cy="46" r={R} fill="none" stroke="#fff" strokeWidth="9" strokeDasharray={`${arc} ${C}`} transform="rotate(135 46 46)" />
+              <circle cx="46" cy="46" r={R} fill="none" stroke="#141414" strokeWidth="9" strokeDasharray={`${arc * 0.8} ${C}`} transform="rotate(135 46 46)" />
+              <text x="46" y="52" textAnchor="middle" fontSize="20" fontFamily="var(--display)" fill="#141414">80</text>
+            </svg>
+            <div className="bars">
+              {DIMENSIONS.map(({ key, max, label }) => (
+                <div key={key} className="mini" data-tip={`${label}: ${SAMPLE[key]} of ${max}`}>
+                  <span>{label}</span><span className="bar"><i style={{ width: `${(100 * SAMPLE[key]) / max}%` }} /></span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="receipt" data-tip="this is what a point looks like"><span className="loc">src/api/auth.ts:42</span> <span className="sev major">major</span><div className="q">const token = req.query.token as string</div></div>
           <div className="ctas">
             <button type="button" onClick={() => router.push("/")} data-tip="a real run on Cloud Run">run it live</button>
             <button type="button" onClick={() => router.push("/run/demo")} data-tip="a recorded run, replayed in the browser">run the demo</button>
           </div>
         </Window>
 
-        <Window title="04 · The autonomy" className="p4" tip="what ran automatically, and where a human touched it">
-          <p><b>Ran automatically:</b> everything after the URL. Clone, install, chunking, exploration, compile, run, claims, blame, scoring, the report, and the second run of the same repo from memory. Nobody approves anything.</p>
-          <p><b>Human intervention, disclosed:</b> a person pastes the URL. We chose three demo repos in advance and tested them. &ldquo;Run the demo&rdquo; replays a recorded run in the browser and never touches the backend.</p>
-          <p><b>Still running when we close the laptops.</b> The service keeps the run; reopen the URL and it is there.</p>
+        <Window title="04 · The autonomy" className="p4" tip="what ran itself, where a human touched it">
+          <div className="auto">
+            <div>
+              <div className="h">ran itself</div>
+              <ul>{["clone", "install", "chunk", "explore", "compile", "run", "claims", "blame", "score", "report"].map((w) => <li key={w}><span className="tick">✓</span>{w}</li>)}</ul>
+            </div>
+            <div>
+              <div className="h">a human</div>
+              <ul>
+                <li><span className="hand">✋</span>pastes the URL</li>
+                <li><span className="hand">✋</span>picked 3 demo repos</li>
+                <li><span className="hand">✋</span>&ldquo;demo&rdquo; = a recording</li>
+              </ul>
+              <div className="lid" data-tip="close the laptops, the service keeps the run">
+                <div className="lap" /><span>lid closed · still running</span>
+              </div>
+            </div>
+          </div>
         </Window>
       </div>
     </div>

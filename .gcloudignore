@@ -9,3 +9,8 @@ docs/
 assets/
 specs/
 comms/
+backend/
+packages/
+.env
+**/.env
+**/.env.*

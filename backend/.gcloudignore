@@ -1,0 +1,7 @@
+# gcloud run deploy --source ./backend uploads this folder; keep it small and secret-free.
+.gcloudignore
+.env
+.env.*
+node_modules/
+data/
+e2e/

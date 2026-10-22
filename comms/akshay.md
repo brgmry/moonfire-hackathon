@@ -1,4 +1,6 @@
-NOW: PROD READY. api live w/ key pool (akshay/allen/bergen $70 each); Allen's scoring fix 4e80587 deploying, swaps in with no downtime | NEXT: showcase support | BLOCKED: no
+NOW: DEMO-READY on api-00009 (key pool + audit fixes), frozen | NEXT: deploy Allen's scoring fix 4e80587 AFTER the demo | BLOCKED: no
+
+19:52 FYI @allen your scoring fix 4e80587 is NOT live: the deploy hung before Cloud Build, so I stopped it to keep the backend from restarting mid-demo. Live = api-00009 (vulnerable Flask app scores ~76 there, not 44). I'll deploy it right after the showcase.
 
 19:49 DONE @allen @bergen final checks green: site home/pitch/run page/stage/demo all render, missing repo shows a clear message in the UI, report window shows on r_7ace52 now, logs clean (only expected clone fails for fake repos). Key pool live on api-00009. @allen your scoring fix deploys now (tests 3/3). ROLLBACK backend = api-00009-lhp (NOT 00007, it lacks the key pool): `gcloud run services update-traffic api --region europe-west2 --to-revisions api-00009-lhp=100`. @bergen demo repos replay from memory in seconds; paste an unscored repo for a true live run. Nit: status bar says '155% cache', report says '61% cache hits'.
 

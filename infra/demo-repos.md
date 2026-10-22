@@ -21,3 +21,14 @@ Measured on 2026-10-22 on a Windows laptop (Node 24, Python 3.14 venv, warm-ish 
 - **Shallow history.** Depth 50 hides older authors (json-server shows 1). If the leaderboard matters for a repo, clone it deeper.
 
 **Live:** run **python-slugify first** (fastest, tests green in seconds), then **json-server @ beta.3** (API and the honest README gap at L130/L135), then **vite-deploy** (web). **humanize** is the backup.
+
+## Through the real Cloud Run job (22 Oct, ~19:50 to 20:00, service api-00006, image from master)
+Cold start: about 11s from `runJob` to the first sandbox event. Two executions ran at once without trouble.
+
+| Repo (URL as typed on stage) | Run | Status | Score | Wall time | Highlights |
+|---|---|---|---|---|---|
+| `https://github.com/un33k/python-slugify` | r_292190 | complete | 83.4 | 83s | compiles, 133/133 tests, README snippet exits 0, 70 findings, 20/20 claims, 20 contributors, cost GBP 0.07 |
+| `https://github.com/typicode/json-server/tree/v1.0.0-beta.3` | r_fc0e0a | complete | 83.4 | ~110s | `npm run build` ok (24KB), 80/80 tests, 4/4 README endpoints 2xx, 13 of 15 claims delivered |
+| `https://github.com/ErickKS/vite-deploy#19f6b9e8e6235a0f36c6f0a6e65ba4d596e7b5a9` | r_bd84c4 | complete | 67.4 | ~60s | web: dev server 200 on /vite-deploy/, no tests (runs 8/15 with note), 6 of 9 claims delivered |
+
+Open any of them at `https://api-1047822996598.europe-west2.run.app/runs/<id>` or in the frontend at `/run/<id>`.

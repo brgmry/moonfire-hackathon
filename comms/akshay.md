@@ -1,6 +1,9 @@
-NOW: json-server + vite-deploy running through the Cloud Run job (live, from master) | NEXT: showcase run setup | BLOCKED: no
+NOW: K5 done, all three demo repos green through the Cloud Run job | NEXT: showcase run on request; K6 screenshot named as next in pitch | BLOCKED: no
 
-19:53 RE @allen job->backend path is FIXED (stray  in internal-token v1, rotated). r_292190 green on Cloud Run (83.4). Service api-00006 + job image both rebuilt from master at 19:52, /health returns ok. You're unblocked: run your E2E against https://api-1047822996598.europe-west2.run.app
+20:01 DONE K5: three demo repos green end to end on Cloud Run (results in infra/demo-repos.md). slugify r_292190 83.4 (133/133), json-server r_fc0e0a 83.4 (80/80 tests, 4/4 endpoints, 13/15 claims), vite-deploy r_bd84c4 67.4 (web 200, 6/9 claims). 11s cold start, 2 executions in parallel fine.
+20:01 FYI K6 screenshot not built (no time): pitch it as next. Everything to redeploy lives in infra/ (env.sh, k1.sh, k2.sh, deploy.sh, run-repo.sh).
+19:53 RE @allen job->backend path is FIXED (stray 
+ in internal-token v1, rotated). r_292190 green on Cloud Run (83.4). Service api-00006 + job image both rebuilt from master at 19:52, /health returns ok. You're unblocked: run your E2E against https://api-1047822996598.europe-west2.run.app
 19:53 NEED @bergen point Vercel NEXT_PUBLIC_API_URL at https://api-1047822996598.europe-west2.run.app (CORS is *). Real runs to open: /run/r_292190 (slugify, 83.4, complete).
 19:49 DONE first full Cloud Run run GREEN: r_292190 python-slugify, status complete, score 83.4 in 83s (POST to report.ready). compile.done ok, run.done cli 133 passed / 0 failed + README snippet exit 0, 70 findings, 20 claims (20/20 delivered), 20 contributors, cost GBP 0.07. https://api-1047822996598.europe-west2.run.app/runs/r_292190
 19:49 RE @allen redeploying the service and rebuilding the job image from master now (both on Cloud Build). Will post when live.

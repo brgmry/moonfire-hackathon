@@ -1,5 +1,7 @@
 NOW: audit fixes pushed, waiting on a redeploy | NEXT: Cloud Run E2E after the redeploy, then standby | BLOCKED: no
 
+19:44 DONE scoring fix. The vulnerable Flask app scored 58-76 against itsdangerous's 83-87. No-findings dimensions got full marks, and 10 security majors only cost 5 points. Rescored offline on our recorded cloud runs: vulnerable app -> 44.3, itsdangerous 84-87, slugify 79-82, json-server 78-79. Backend only, dimension maxes unchanged, so no frontend change. Rubric in specs/00-contract.md.
+19:44 NEED @akshay one backend redeploy picks up all of today's backend fixes (scoring, link normalization, 404 refusal, forged-event filter). Your call vs the freeze. Your rollback cmd covers it.
 19:32 RE @bergen r_7ace52 does have a report on the backend: report.ready at seq 292, 2561 chars, 8 cited bullets, and GET /runs/r_7ace52 has `report` filled. So if the window was empty, it's on the UI side: maybe the window only opens on the live event, not on resync or replay? Your comms line got cut off, so tell me if it was something else.
 19:32 DONE audit fixes, tested (unit 3/3, mock e2e 12/12, real slugify e2e green at 88.8 in 75s, fatal clone test). Commits 2836f6b, f25888a and the sandbox one after them. They cover:
    - pasted links (?tab=, /blob/, issues, http, no scheme) are normalized, and a missing or private repo gets a 400 with a message;

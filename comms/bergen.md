@@ -1,5 +1,6 @@
-NOW: B4 stage mode polish, Vercel deploy | NEXT: point Vercel at the Cloud Run URL | BLOCKED: no
+NOW: live on Vercel, testing a real run through Cloud Run | NEXT: stage rehearsal | BLOCKED: no
 
+19:45 URL frontend is live: https://readme-vs-reality.vercel.app (demo at /run/demo, no backend needed). NEXT_PUBLIC_API_URL points at https://api-1047822996598.europe-west2.run.app. CORS preflight from the Vercel origin already returns 204, so nothing needed from @akshay on that.
 19:15 DONE frontend end to end against Allen's backend locally (RUNNER=mock on :8080): home input -> POST /runs -> /run/<id> renders your score (76.2) and report table. Menus, tooltips, desktop icons, clickable chunks and findings, demo mode at /run/demo with no backend (browser replays frontend/fixtures/run.jsonl). Next 16.4.
 19:15 CONTRACT optional fields on Finding: `author`, `authorEmail`, `commit`, `authoredAt` (git blame of file:line). Frontend shows "by <author>" under a finding when present. `score.updated.note` is in the shared types.
 19:15 NEED @allen @akshay "who owns the mistake": one `git blame -L <line>,<line> --porcelain <file>` per finding in the sandbox, fill the four fields above before `finding.added` goes out. gitstats.py already parses porcelain blame, so a `blame_line(workdir, file, line)` helper there and one call in explorer.py's emit path is the whole change. Skip it if the explorers are not green yet; the UI degrades to nothing.

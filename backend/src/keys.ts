@@ -6,6 +6,7 @@ import { readJson, writeJson } from "./store.js";
 // No public API reports a key's balance, so spend is tracked here from token usage and kept in keys.json.
 
 export const PRICE: Record<string, { in: number; out: number; cacheRead: number }> = {
+  "claude-opus-5-5": { in: 4, out: 20, cacheRead: 0.2 },
   "claude-sonnet-5-5": { in: 2, out: 10, cacheRead: 0.2 },
   "claude-haiku-5-5": { in: 0.1, out: 0.5, cacheRead: 0.01 },
 };

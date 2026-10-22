@@ -45,7 +45,7 @@ export const cloudRunRunner: Runner = {
     }
   },
   async rerunChunk(run, chunkId) {
-    await execute(run, { RERUN_CHUNK: chunkId }).catch((err) =>
+    await execute(run, { RERUN_CHUNK: chunkId, RERUN_CHUNK_JSON: JSON.stringify(run.chunks.find((c) => c.id === chunkId) ?? {}) }).catch((err) =>
       console.error(JSON.stringify({ severity: "ERROR", msg: "rerun failed", runId: run.id, err: String(err) })),
     );
   },

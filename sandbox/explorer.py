@@ -69,8 +69,9 @@ async def run(agent_id: str, chunk: dict, repo: str, do_not: list[str]) -> list[
         events.emit("agent.working", agentId=agent_id, file=llm.rel(path, repo))
 
     user = (
-        f"Chunk: {chunk['path']} ({len(chunk['files'])} files)\n"
-        "Files to read, every one of them:\n" + "\n".join(chunk["files"]) + "\n"
+        f"Chunk: {chunk.get('name') or chunk['path']} ({len(chunk['files'])} files)\n"
+        + (f"Focus from the lead reviewer: {chunk['focus']}\n" if chunk.get("focus") else "")
+        + "Files to read, every one of them:\n" + "\n".join(chunk["files"]) + "\n"
     )
     if do_not:
         user += "\nPast reviewers were overruled for these, do not repeat them:\n" + "\n".join(f"- {d}" for d in do_not) + "\n"

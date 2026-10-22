@@ -54,6 +54,6 @@ export const localRunner: Runner = {
     launch(run);
   },
   async rerunChunk(run, chunkId) {
-    launch(run, { RERUN_CHUNK: chunkId });
+    launch(run, { RERUN_CHUNK: chunkId, RERUN_CHUNK_JSON: JSON.stringify(run.chunks.find((c) => c.id === chunkId) ?? {}) });
   },
 };

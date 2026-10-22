@@ -43,9 +43,11 @@ def _result_error(m: ResultMessage) -> str | None:
 
 
 async def ask(user: str, *, system: str, model: str, cwd: str | None, tools: list[str], tokens: dict,
-              max_turns: int = 25, timeout: float = 240, on_read=None, resume: str | None = None) -> tuple[str, str | None]:
+              max_turns: int = 25, timeout: float = 240, on_read=None, resume: str | None = None,
+              out: dict | None = None, effort: str | None = None, output_format: dict | None = None) -> tuple[str, str | None]:
     """Run one agent turn on a key from the pool, moving to the next key on a billing, auth or rate error.
-    Returns (final_text, session_id). On timeout returns the last text seen."""
+    Returns (final_text, session_id). On timeout returns the last text seen.
+    With output_format (a JSON schema), the validated object lands in out["structured"]."""
     tried: set[str] = set()
     state = {"text": "", "session": resume}
     for _ in range(max(1, keys.count())):
@@ -54,6 +56,8 @@ async def ask(user: str, *, system: str, model: str, cwd: str | None, tools: lis
             model=model, system_prompt=system, cwd=cwd, tools=tools, allowed_tools=tools,
             permission_mode="bypassPermissions", max_turns=max_turns, setting_sources=[], resume=resume,
             env={"ANTHROPIC_API_KEY": key} if key else {},
+            **({"effort": effort} if effort else {}),
+            **({"output_format": output_format} if output_format else {}),
         )
         state = {"text": "", "session": resume, "error": None}
 
@@ -74,6 +78,8 @@ async def ask(user: str, *, system: str, model: str, cwd: str | None, tools: lis
                     state["error"] = state["error"] or _result_error(m)
                     if m.result:
                         state["text"] = m.result
+                    if out is not None and getattr(m, "structured_output", None) is not None:
+                        out["structured"] = m.structured_output
 
         try:
             await asyncio.wait_for(consume(), timeout=timeout)

@@ -1,4 +1,4 @@
-"""Orchestrator: clone, profile, install, chunk, dispatch. Plain Python, no LLM tonight.
+"""Orchestrator: clone, profile, install, plan, dispatch. The split is Opus 5.5's call (planner.py); rules are the fallback.
 
 Interface for the non-explorer agents (compiler.py, runner.py, gitstats.py, Akshay):
 
@@ -30,6 +30,7 @@ from collections import Counter, defaultdict
 import httpx
 
 import events
+import llm
 
 SONNET = "claude-sonnet-5-5"
 HAIKU = "claude-haiku-5-5"
@@ -94,6 +95,7 @@ def _cfg() -> dict:
         "max_parallel": int(os.environ.get("MAX_PARALLEL", "8")),
         "memory": memory if isinstance(memory, dict) else {},
         "rerun_chunk": os.environ.get("RERUN_CHUNK") or None,
+        "rerun_chunk_json": os.environ.get("RERUN_CHUNK_JSON") or None,
     }
 
 
@@ -249,11 +251,16 @@ def profile_repo(repo: str, repo_url: str, files: list[str]) -> dict:
 
 # ---------- 2. install ----------
 
-def install(repo: str, manager: str | None, memory: dict) -> dict:
+def default_install(manager: str | None, memory: dict) -> str | None:
     if not manager:
-        return {"ok": True, "manager": None, "durationMs": 0, "errorsTail": "", "command": None}
-    recipe = (memory.get("recipes") or {}).get(manager)
-    command = recipe or DEFAULT_INSTALL.get(manager)
+        return None
+    return (memory.get("recipes") or {}).get(manager) or DEFAULT_INSTALL.get(manager)
+
+
+def install(repo: str, manager: str | None, memory: dict, command: str | None = None) -> dict:
+    command = command or default_install(manager, memory)
+    if not command:
+        return {"ok": True, "manager": manager, "durationMs": 0, "errorsTail": "", "command": None}
     t0 = time.time()
     try:
         r = sh(command, cwd=repo, timeout=INSTALL_TIMEOUT_S)
@@ -282,6 +289,11 @@ def _common_dir(paths: list[str]) -> str:
     return "/".join(common)
 
 
+def churn_counts(repo: str) -> Counter:
+    log = sh(["git", "log", "--since=1.year", "--name-only", "--pretty=format:"], cwd=repo).stdout
+    return Counter(line.strip() for line in log.splitlines() if line.strip())
+
+
 def make_chunks(repo: str, files: list[str], sizes: dict, max_chunks: int,
                 max_files: int = 40, max_bytes: int = 150 * 1024) -> list[dict]:
     pkg_dirs = sorted({os.path.dirname(p) for p in files
@@ -306,8 +318,7 @@ def make_chunks(repo: str, files: list[str], sizes: dict, max_chunks: int,
         if cur:
             pieces.append((key, cur))
 
-    log = sh(["git", "log", "--since=1.year", "--name-only", "--pretty=format:"], cwd=repo).stdout
-    churn_by_path = Counter(line.strip() for line in log.splitlines() if line.strip())
+    churn_by_path = churn_counts(repo)
 
     chunks, seen_ids, seen_paths = [], Counter(), Counter()
     for key, fs in pieces:
@@ -372,14 +383,17 @@ async def run() -> None:
     t0 = time.time()
     crew = Crew()
     orch_id = crew.new_id("orchestrator")
-    events.emit("agent.spawned", agentId=orch_id, role="orchestrator", model=SONNET)
+    planner = _optional("planner")
+    events.emit("agent.spawned", agentId=orch_id, role="orchestrator", model=planner.MODEL if planner else None)
+    cfg["planner"] = planner
+    cfg["orch_tokens"] = llm.zero_tokens()
     try:
         await asyncio.wait_for(_run(cfg, crew, orch_id, t0), timeout=DEADLINE_S)
     except asyncio.TimeoutError:
         print(f"orchestrator: deadline {DEADLINE_S}s hit, exiting with what landed", flush=True)
     finally:
-        # Own tokens only: the backend sums every agent.done, so totals here would double count.
-        events.emit("agent.done", agentId=orch_id, tokens={"in": 0, "out": 0, "cacheRead": 0})
+        # Own tokens only (the planner call): the backend sums every agent.done.
+        events.emit("agent.done", agentId=orch_id, **llm.done(cfg["orch_tokens"]))
 
 
 async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
@@ -391,20 +405,44 @@ async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
         return await _rerun(cfg, crew, repo, files, sizes)
     events.emit("repo.profile", **{k: v for k, v in profile.items() if k != "fork"})
 
-    # Install runs while explorers read: they need only the source; compiler and runner wait for it.
+    # Install runs while the lead plans and explorers read: they need only the source.
     events.emit("agent.working", agentId=orch_id, file=f"install ({profile['packageManager'] or 'none'})")
+    default_cmd = default_install(profile["packageManager"], cfg["memory"])
     install_task = asyncio.create_task(asyncio.to_thread(install, repo, profile["packageManager"], cfg["memory"]))
 
-    chunks = await asyncio.to_thread(make_chunks, repo, files, sizes, cfg["max_chunks"])
+    claims = _optional("claims")
+    tasks = []
+    if claims:
+        aid = crew.new_id("claims")
+        tasks.append(asyncio.create_task(crew.supervise(aid, "claims", HAIKU, lambda: claims.run(aid, repo))))
+
+    churn = await asyncio.to_thread(churn_counts, repo)
+    plan = None
+    planner = cfg.get("planner")
+    if planner:
+        events.emit("agent.working", agentId=orch_id, file="planning the review")
+        try:
+            plan = await planner.plan(repo, profile, files, sizes, churn, default_cmd, cfg["orch_tokens"],
+                                      on_step=lambda p: events.emit("agent.working", agentId=orch_id, file=llm.rel(p, repo)))
+        except Exception as e:  # planning must never stop the run
+            print(f"orchestrator: planner failed: {type(e).__name__}: {e}", flush=True)
+            plan = None
+    if plan:
+        chunks = planner.build_chunks(plan, files, sizes, churn, cfg["max_chunks"], _common_dir, _slug)
+        print(f"orchestrator: plan from {planner.MODEL}: {len(plan['chunks'])} planned, {len(chunks)} chunks, "
+              f"kind={plan.get('kind')}, install={'custom' if plan.get('install') else 'default'}", flush=True)
+    else:
+        events.emit("agent.working", agentId=orch_id, file="planner unavailable, splitting by rules")
+        chunks = await asyncio.to_thread(make_chunks, repo, files, sizes, cfg["max_chunks"])
     for c in chunks:
         events.emit("chunk.created", chunk=c)
+    plan_ctx = {"kind": (plan or {}).get("kind"), "install": (plan or {}).get("install") or None,
+                "summary": (plan or {}).get("summary")}
 
     memory = cfg["memory"]
     do_not = [str(x) for x in (memory.get("doNot") or [])][:3]
     sem = asyncio.Semaphore(cfg["max_parallel"])
     explorer = _optional("explorer")
-    claims = _optional("claims")
-    tasks = []
 
     async def explore(chunk):
         async with sem:
@@ -413,12 +451,15 @@ async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
                                         lambda: explorer.run(aid, chunk, repo, do_not), chunk_id=chunk["id"])
 
     explorer_tasks = [asyncio.create_task(explore(c)) for c in chunks if not c["sampled"]] if explorer else []
-    if claims:
-        aid = crew.new_id("claims")
-        tasks.append(asyncio.create_task(crew.supervise(aid, "claims", HAIKU, lambda: claims.run(aid, repo))))
-
     async def after_install():
         result = await install_task
+        # The lead's install command is the second try when the default failed or there was none.
+        custom = plan_ctx["install"]
+        if custom and custom != result.get("command") and (not result["ok"] or not result.get("command")):
+            events.emit("agent.working", agentId=orch_id, file="install (plan)")
+            retry = await asyncio.to_thread(install, repo, profile["packageManager"], cfg["memory"], custom)
+            if retry["ok"] or not result["ok"]:
+                result = retry
         events.emit("install.done", **result)
         return result
 
@@ -427,7 +468,7 @@ async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
 
     def ctx_for(agent_id: str, install_result: dict) -> dict:
         return {"agent_id": agent_id, "workdir": repo, "profile": profile, "install": install_result,
-                "chunks": chunks, "memory": memory}
+                "chunks": chunks, "memory": memory, "plan": plan_ctx}
 
     for mod_name, role, model, needs_install in (("gitstats", "git", None, False),
                                                  ("compiler", "compiler", SONNET, True),
@@ -461,8 +502,15 @@ async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
 
 async def _rerun(cfg: dict, crew: Crew, repo: str, files: list[str], sizes: dict) -> None:
     """RERUN_CHUNK=<id>: the backend already has the profile and chunks, explore that one chunk again."""
-    chunks = await asyncio.to_thread(make_chunks, repo, files, sizes, cfg["max_chunks"])
-    chunk = next((c for c in chunks if c["id"] == cfg["rerun_chunk"]), None)
+    chunk = None
+    if cfg.get("rerun_chunk_json"):
+        try:
+            chunk = json.loads(cfg["rerun_chunk_json"])
+        except json.JSONDecodeError:
+            chunk = None
+    if not chunk:
+        chunks = await asyncio.to_thread(make_chunks, repo, files, sizes, cfg["max_chunks"])
+        chunk = next((c for c in chunks if c["id"] == cfg["rerun_chunk"]), None)
     explorer = _optional("explorer")
     if not chunk or not explorer:
         print(f"orchestrator: rerun chunk {cfg['rerun_chunk']} not found", flush=True)

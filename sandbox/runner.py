@@ -145,7 +145,7 @@ def normalise(r: dict, kind: str) -> dict:
 
 async def _work(ctx: dict, agent_id: str, workdir: str, tokens: dict, state: dict) -> dict:
     deadline = time.monotonic() + TOTAL_CAP
-    kind = guess_kind(ctx.get("profile") or {}, workdir)
+    kind = (ctx.get("plan") or {}).get("kind") or guess_kind(ctx.get("profile") or {}, workdir)
     state["kind"] = kind
     prompt = (context_block(ctx, workdir)
               + f"\nKind hint (from heuristics): {kind}"

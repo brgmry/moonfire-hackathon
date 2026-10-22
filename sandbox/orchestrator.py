@@ -78,8 +78,8 @@ DEFAULT_INSTALL = {
     "cargo": "cargo fetch",
     "go": "go mod download",
 }
-TEST_RE = re.compile(r"(^|/)(tests?|__tests__|spec)/|_test\.(go|py)$|(^|/)test_[^/]+\.py$"
-                     r"|[.-](test|spec)(-d)?\.[a-z]+$|(^|/)tests?\.[a-z]+$")
+TEST_RE = re.compile(r"(^|/)(tests?|__tests__|spec|specs)/|[._]tests?/|_test\.(go|py|exs?)$|(^|/)test_[^/]+\.py$"
+                     r"|[.-](test|spec)(-d)?\.[a-z]+$|(^|/)tests?\.[a-z]+$|Tests?\.(php|cs|java|kt|swift)$", re.I)
 
 
 def _cfg() -> dict:
@@ -108,28 +108,44 @@ def split_ref(url: str) -> tuple[str, str | None]:
     return m.group(1), m.group(2) or m.group(3)
 
 
+SECRET_ENV = ("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEYS", "ANTHROPIC_AUTH_TOKEN", "INTERNAL_TOKEN")
+
+
 def sh(cmd, cwd=None, timeout=60) -> subprocess.CompletedProcess:
+    # Install scripts and git hooks are the repo's code: they get no API keys.
+    env = {k: v for k, v in os.environ.items() if k not in SECRET_ENV}
     return subprocess.run(cmd, cwd=cwd, timeout=timeout, capture_output=True, text=True,
-                          shell=isinstance(cmd, str), errors="replace")
+                          shell=isinstance(cmd, str), errors="replace", env=env)
 
 
 # ---------- 1. clone and profile ----------
+
+class CloneFailed(Exception):
+    pass
+
 
 def clone(repo_url: str, workdir: str, ref: str | None = None) -> str:
     os.makedirs(workdir, exist_ok=True)
     dest = workdir if not os.listdir(workdir) else os.path.join(workdir, "repo")
     if not ref:
-        r = sh(["git", "clone", "--depth", "50", "--no-tags", repo_url, dest], timeout=180)
+        try:
+            r = sh(["git", "clone", "--depth", "50", "--no-tags", repo_url, dest], timeout=180)
+        except subprocess.TimeoutExpired:
+            raise CloneFailed("git clone took longer than 180s; the repository is too large for a live run")
         if r.returncode != 0:
-            raise RuntimeError(f"git clone failed: {r.stderr[-500:]}")
+            why = " ".join(l for l in r.stderr.strip().splitlines() if not l.startswith("Cloning into"))
+            raise CloneFailed(f"git clone failed: {why[-300:]}")
         return dest
     # A sha, tag or branch: fetch just that history so the demo repos stay pinned.
     os.makedirs(dest, exist_ok=True)
     for cmd in (["git", "init", "-q"], ["git", "remote", "add", "origin", repo_url],
                 ["git", "fetch", "-q", "--depth", "50", "--no-tags", "origin", ref], ["git", "checkout", "-q", "FETCH_HEAD"]):
-        r = sh(cmd, cwd=dest, timeout=180)
+        try:
+            r = sh(cmd, cwd=dest, timeout=180)
+        except subprocess.TimeoutExpired:
+            raise CloneFailed("fetching the pinned ref took longer than 180s")
         if r.returncode != 0:
-            raise RuntimeError(f"{' '.join(cmd[:2])} failed: {r.stderr[-500:]}")
+            raise CloneFailed(f"{' '.join(cmd[:2])} failed for ref {ref}: {r.stderr.strip()[-300:]}")
     return dest
 
 
@@ -148,7 +164,7 @@ def list_files(repo: str) -> list[str]:
             continue
         full = os.path.join(repo, p)
         try:
-            if not os.path.isfile(full) or os.path.getsize(full) > MAX_FILE_BYTES:
+            if os.path.islink(full) or not os.path.isfile(full) or os.path.getsize(full) > MAX_FILE_BYTES:
                 continue
         except OSError:
             continue
@@ -391,6 +407,10 @@ async def run() -> None:
         await asyncio.wait_for(_run(cfg, crew, orch_id, t0), timeout=DEADLINE_S)
     except asyncio.TimeoutError:
         print(f"orchestrator: deadline {DEADLINE_S}s hit, exiting with what landed", flush=True)
+        events.emit("sandbox.failed", fatal=False, reason=f"the crew hit its {DEADLINE_S}s deadline; scored what landed")
+    except CloneFailed as e:
+        print(f"orchestrator: {e}", flush=True)
+        events.emit("sandbox.failed", fatal=True, reason=str(e)[:400])
     finally:
         # Own tokens only (the planner call): the backend sums every agent.done.
         events.emit("agent.done", agentId=orch_id, **llm.done(cfg["orch_tokens"]))
@@ -427,12 +447,19 @@ async def _run(cfg: dict, crew: Crew, orch_id: str, t0: float) -> None:
         except Exception as e:  # planning must never stop the run
             print(f"orchestrator: planner failed: {type(e).__name__}: {e}", flush=True)
             plan = None
+    chunks = None
     if plan:
-        chunks = planner.build_chunks(plan, files, sizes, churn, cfg["max_chunks"], _common_dir, _slug)
+        try:
+            chunks = planner.build_chunks(plan, files, sizes, churn, cfg["max_chunks"], _common_dir, _slug)
+        except Exception as e:  # a malformed plan falls back to the rules
+            print(f"orchestrator: plan unusable ({type(e).__name__}: {e}), splitting by rules", flush=True)
+            plan = None
+    if plan and chunks:
         print(f"orchestrator: plan from {planner.MODEL}: {len(plan['chunks'])} planned, {len(chunks)} chunks, "
               f"kind={plan.get('kind')}, install={'custom' if plan.get('install') else 'default'}", flush=True)
     else:
         events.emit("agent.working", agentId=orch_id, file="planner unavailable, splitting by rules")
+        plan = None
         chunks = await asyncio.to_thread(make_chunks, repo, files, sizes, cfg["max_chunks"])
     for c in chunks:
         events.emit("chunk.created", chunk=c)

@@ -15,7 +15,7 @@ import llm
 
 MODEL = "claude-opus-5-5"
 EFFORT = "medium"
-TIMEOUT_S = 120
+TIMEOUT_S = 75
 MAX_TURNS = 12
 MAX_FILES, MAX_BYTES = 40, 150 * 1024
 KINDS = ("cli", "api", "web", "lib")
@@ -67,14 +67,15 @@ def _dir_table(files: list[str], sizes: dict, churn: Counter, limit: int = 400) 
 
 
 def _readme_head(repo: str, lines: int = 60) -> str:
-    for name in sorted(os.listdir(repo)):
-        if name.lower().startswith("readme"):
-            try:
-                with open(os.path.join(repo, name), encoding="utf-8", errors="replace") as f:
-                    return "".join(f.readlines()[:lines])
-            except OSError:
-                return ""
-    return "(no README at the root)"
+    import claims
+    rel = claims.find_readme(repo)
+    if not rel:
+        return "(no README found)"
+    try:
+        with open(os.path.join(repo, rel), encoding="utf-8", errors="replace") as f:
+            return "".join(f.readlines()[:lines])
+    except OSError:
+        return ""
 
 
 def _norm(entry: str) -> str:
@@ -150,7 +151,7 @@ def build_chunks(plan: dict, files: list[str], sizes: dict, churn: Counter, max_
         chunks.append({
             "id": cid, "path": common_dir(fs) if len(fs) > 1 else fs[0], "name": name,
             "files": fs, "bytes": sum(sizes[f] for f in fs), "churn": sum(churn[f] for f in fs),
-            "focus": focus, "priority": priority, "sampled": skipped_flag,
+            "focus": focus, "priority": priority, "sampled": skipped_flag, "skipped": skipped_flag,
         })
     live = [c for c in chunks if not c["sampled"]]
     if len(live) > max_chunks:

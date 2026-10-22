@@ -14,10 +14,15 @@ SYSTEM = llm.prompt("claims")
 
 
 def find_readme(repo: str) -> str | None:
-    names = {n.lower(): n for n in os.listdir(repo)}
-    for cand in ("readme.md", "readme.mdx", "readme.rst", "readme.txt", "readme"):
-        if cand in names:
-            return names[cand]
+    """README path relative to the repo: root first, then .github/ (GitHub shows it) and docs/."""
+    for d in ("", ".github", "docs"):
+        try:
+            names = {n.lower(): n for n in os.listdir(os.path.join(repo, d) if d else repo)}
+        except OSError:
+            continue
+        for cand in ("readme.md", "readme.markdown", "readme.mdx", "readme.rst", "readme.adoc", "readme.txt", "readme"):
+            if cand in names:
+                return os.path.join(d, names[cand]) if d else names[cand]
     return None
 
 

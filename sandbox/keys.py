@@ -28,7 +28,8 @@ def _pairs(s: str) -> list[tuple[str, str]]:
 
 
 def load() -> None:
-    _keys.update(_pairs(os.environ.get("ANTHROPIC_API_KEYS", "")))
+    # Out of the environment once parsed, so repo code never sees all three keys.
+    _keys.update(_pairs(os.environ.pop("ANTHROPIC_API_KEYS", "")))
     if not _keys and os.environ.get("ANTHROPIC_API_KEY"):
         _keys["default"] = os.environ["ANTHROPIC_API_KEY"]
     for name, w in _pairs(os.environ.get("ANTHROPIC_KEY_WEIGHTS", "")):

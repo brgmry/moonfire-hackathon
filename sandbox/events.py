@@ -8,6 +8,9 @@ from datetime import datetime, timezone
 
 import httpx
 
+# Read once and removed from os.environ: repo code (installs, tests, Bash agents) inherits the env.
+_TOKEN = os.environ.pop("INTERNAL_TOKEN", "").strip()
+
 BATCH = 20
 INTERVAL = 0.5
 
@@ -40,7 +43,7 @@ def _post(events: list[dict]) -> None:
     if not api or api == "http://placeholder":
         return
     body = {"runId": os.environ.get("RUN_ID", "local"), "events": events}
-    headers = {"Authorization": f"Bearer {os.environ.get('INTERNAL_TOKEN', '').strip()}"}
+    headers = {"Authorization": f"Bearer {_TOKEN}"}
     for attempt in range(3):
         try:
             r = httpx.post(api.rstrip("/") + "/internal/events", json=body, headers=headers, timeout=10)

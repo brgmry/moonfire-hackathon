@@ -48,6 +48,7 @@ export function Desktop({ id }: { id: string }) {
     File: [
       { label: "New run…", tip: "back to the main screen", onClick: () => router.push("/") },
       { label: "Run the demo", tip: "the fixture run, no backend needed", onClick: () => router.push("/run/demo") },
+      { label: "Benchmark", tip: "every run, ranked, with the distribution", onClick: () => router.push("/bench") },
       { label: "Replay this run", tip: "reload from the first event", onClick: () => window.location.reload(), disabled: id !== "demo" },
       { sep: true, label: "" },
       { label: "Copy run URL", tip: "put it on every phone", onClick: () => copy(url, "URL") },

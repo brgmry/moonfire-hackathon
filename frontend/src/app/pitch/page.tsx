@@ -20,7 +20,7 @@ const SAMPLE: Record<string, number> = { claims: 16, runs: 14, compiles: 7, qual
 export default function Pitch() {
   const router = useRouter();
   const menus: Menus = {
-    File: [{ label: "Run it live", onClick: () => router.push("/") }, { label: "Run the demo", onClick: () => router.push("/run/demo") }],
+    File: [{ label: "Run it live", onClick: () => router.push("/") }, { label: "Run the demo", onClick: () => router.push("/run/demo") }, { label: "Benchmark", onClick: () => router.push("/bench") }],
     Edit: [{ label: "Copy site URL", onClick: () => { navigator.clipboard?.writeText(window.location.origin).catch(() => {}); } }],
     Special: [{ label: "About README vs Reality", onClick: () => router.push("/") }],
   };

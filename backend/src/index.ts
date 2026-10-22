@@ -31,6 +31,8 @@ app.use(
 );
 
 app.get("/healthz", (c) => c.text("ok"));
+// Cloud Run's front end answers /healthz itself, so probe /health there.
+app.get("/health", (c) => c.text("ok"));
 
 // Credit left per key, no secrets.
 app.get("/keys", (c) => c.json(publicView()));

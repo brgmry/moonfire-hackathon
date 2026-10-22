@@ -29,16 +29,6 @@ function payload(e: Event): Record<string, any> {
   return rest;
 }
 
-// The sandbox sends these payloads flat (specs/00-contract.md); clients get them nested (packages/contract).
-const NESTED: Record<string, string> = { "repo.profile": "profile", "compile.done": "result", "run.done": "result", contributors: "contributors" };
-
-export function normalize(input: Record<string, any>): Record<string, any> {
-  const key = NESTED[input.type];
-  if (!key || input[key] !== undefined) return input;
-  const { type, ts, seq, runId, ...rest } = input;
-  return { type, ts, seq, runId, [key]: rest };
-}
-
 function agent(s: RunState, agentId: string): Agent | undefined {
   return s.agents.find((a) => a.agentId === agentId);
 }

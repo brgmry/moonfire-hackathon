@@ -14,7 +14,7 @@ Change this file and tell the other two. Nothing else is shared.
 
 CORS: allow the Vercel origin and `http://localhost:3000`. SSE sets `Cache-Control: no-cache`, `X-Accel-Buffering: no`.
 
-Wire shape note: the sandbox may send `repo.profile`, `compile.done`, `run.done` and `contributors` with their fields flat, as listed below. The backend broadcasts them nested, as `packages/contract` types them: `{ profile }`, `{ result }`, `{ result }`, `{ contributors }`. `GET /runs/:id` returns the backend state plus `events`, so a client can rebuild state with the shared reducer.
+Payloads are flat on the event everywhere (sandbox, backend, `packages/contract`). `GET /runs/:id` returns the backend state plus `events`, so a client can rebuild state with the shared reducer.
 
 ## Event envelope
 ```json

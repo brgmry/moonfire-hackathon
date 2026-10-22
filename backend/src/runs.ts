@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { apply, initialState, normalize } from "./reducer.js";
+import { apply, initialState } from "./reducer.js";
 import { score } from "./score.js";
 import { validateFinding } from "./validate.js";
 import { writeReport } from "./writer.js";
@@ -61,7 +61,7 @@ export function subscribe(id: string, fn: (e: Event) => void): () => void {
 export function appendEvent(runId: string, input: Record<string, any>): Event {
   const run = runs.get(runId);
   if (!run) throw new Error(`no run ${runId}`);
-  const { seq: _drop, runId: _r, ...rest } = normalize(input);
+  const { seq: _drop, runId: _r, ...rest } = input;
   const e: Event = { ...rest, seq: run.state.lastSeq + 1, ts: input.ts ?? new Date().toISOString(), runId, type: input.type };
   apply(run.state, e);
   run.events.push(e);

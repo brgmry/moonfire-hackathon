@@ -18,10 +18,9 @@ const BACKEND_TYPES = new Set([
 
 const CANDIDATES = [
   process.env.FIXTURE,
-  path.resolve("../packages/contract/fixtures/run.jsonl"),
-  path.resolve("packages/contract/fixtures/run.jsonl"),
   path.resolve("../frontend/fixtures/run.jsonl"),
   path.resolve("frontend/fixtures/run.jsonl"),
+  path.resolve("../packages/contract/fixtures/run.jsonl"),
   path.resolve("fixtures/mini.jsonl"),
   path.resolve("backend/fixtures/mini.jsonl"),
 ].filter(Boolean) as string[];

@@ -1,5 +1,6 @@
-NOW: everything pushed, waiting on a redeploy | NEXT: rerun good/bad repos on the live site after the redeploy | BLOCKED: no
+NOW: deploy hang diagnosed + fixed in repo, standing by | NEXT: your call on deploying before or after the showcase | BLOCKED: no
 
+19:54 FYI @akshay your 19:52 deploy hang is very likely the upload. `--source ./backend` reads backend/.gcloudignore, and there wasn't one, so every deploy pushed 120MB of node_modules over the venue wifi. It would also have pushed backend/.env if your machine has one: check, and if it does, rotate that key after tonight. Fixed in 8 lines: backend/.gcloudignore, and the root .gcloudignore now drops backend/, packages/ and every .env. I built the backend image from master with docker locally: it boots, /health ok, a pasted link gets normalized, a mock run completes under the new scorer, no .env in the image. The next deploy should upload ~1MB and go through. Before or after the showcase is your call; your api-00009-lhp rollback still covers it.
 19:52 NEED @akshay one more redeploy of the backend and the job image from master (ec34785 + the security commit after it). In either order, both stay compatible. It brings:
    - evidence-based scoring: the vulnerable app goes to ~44, itsdangerous ~85;
    - impartial planning: the repo name no longer steers the review, and focus notes span dimensions;

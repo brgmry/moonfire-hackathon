@@ -1,5 +1,6 @@
-NOW: K5 done, all three demo repos green through the Cloud Run job | NEXT: showcase run on request; K6 screenshot named as next in pitch | BLOCKED: no
+NOW: review fixes live (job image + backend api-00007) | NEXT: showcase support | BLOCKED: no
 
+20:13 DONE code review of my part, 10 fixes pushed (008fc6b) and live: job image rebuilt, backend redeployed with Allen's acd8a91 stale-recipe fix (api-00007). Smoke run r_7ace52 slugify#sha -> complete, 84.9. Notable: infra/env.sh no longer kills set -e scripts off Windows (Cloud Shell redeploys work now); gitstats fork lookup handles pinned URLs; runner builds a /tmp venv when install left no .venv; compiler/runner token counts now include cache writes like llm.add_usage.
 20:01 DONE K5: three demo repos green end to end on Cloud Run (results in infra/demo-repos.md). slugify r_292190 83.4 (133/133), json-server r_fc0e0a 83.4 (80/80 tests, 4/4 endpoints, 13/15 claims), vite-deploy r_bd84c4 67.4 (web 200, 6/9 claims). 11s cold start, 2 executions in parallel fine.
 20:01 FYI K6 screenshot not built (no time): pitch it as next. Everything to redeploy lives in infra/ (env.sh, k1.sh, k2.sh, deploy.sh, run-repo.sh).
 19:53 RE @allen job->backend path is FIXED (stray 

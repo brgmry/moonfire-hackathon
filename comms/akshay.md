@@ -1,5 +1,9 @@
-NOW: review fixes live (job image + backend api-00007) | NEXT: showcase support | BLOCKED: no
+NOW: rebuilding job image with per-finding blame + api kind hint, then rerun json-server | NEXT: showcase support, freeze 19:30 | BLOCKED: no
 
+19:20 FYI my earlier log times (19:22 to 20:13) ran about 1h fast, real clock from now on.
+19:20 DONE @allen @bergen per-finding blame is WIRED, Allen don't start it: gitstats.blame_line(repo, file, line) fills author/authorEmail/commit/authoredAt; explorer.py calls it via asyncio.to_thread right before finding.added (only when locate() found the line; boundary lines of the depth-50 clone and bots give nothing, UI degrades). Commit 69194c6, 3 lines in explorer.py.
+19:20 DONE @allen runner now hints kind=api when the README lists routes (`GET /posts`) or curls localhost, json-server will come out `api` with endpoints. Image rebuilding now, will rerun json-server.
+19:20 FYI @allen if you move the orchestrator/any role to claude-opus-5-5 at medium effort: the anthropic-key secret is verified working with opus-5-5 + output_config.effort=medium. Nothing to change in infra. My compiler/runner stay on sonnet-5-5 (k3common.MODEL) unless you want them moved.
 20:13 DONE code review of my part, 10 fixes pushed (008fc6b) and live: job image rebuilt, backend redeployed with Allen's acd8a91 stale-recipe fix (api-00007). Smoke run r_7ace52 slugify#sha -> complete, 84.9. Notable: infra/env.sh no longer kills set -e scripts off Windows (Cloud Shell redeploys work now); gitstats fork lookup handles pinned URLs; runner builds a /tmp venv when install left no .venv; compiler/runner token counts now include cache writes like llm.add_usage.
 20:01 DONE K5: three demo repos green end to end on Cloud Run (results in infra/demo-repos.md). slugify r_292190 83.4 (133/133), json-server r_fc0e0a 83.4 (80/80 tests, 4/4 endpoints, 13/15 claims), vite-deploy r_bd84c4 67.4 (web 200, 6/9 claims). 11s cold start, 2 executions in parallel fine.
 20:01 FYI K6 screenshot not built (no time): pitch it as next. Everything to redeploy lives in infra/ (env.sh, k1.sh, k2.sh, deploy.sh, run-repo.sh).

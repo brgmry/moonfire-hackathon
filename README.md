@@ -14,7 +14,7 @@ Paste a GitHub URL. A crew of AI agents clones it into a throwaway Google Cloud 
 builds it, runs it, checks every promise in its README, and returns a score out of 100.<br>
 Every point traces back to a file, a line and a quote.
 
-**[Try it on shipitornot.com](https://shipitornot.com)** · [Pitch](https://shipitornot.com/pitch) · [Recorded demo](https://shipitornot.com/run/demo) · [A real run](https://shipitornot.com/run/r_a650c3) · [Demo script](DEMO.md)
+**[Try it on shipitornot.com](https://shipitornot.com)** · [Pitch](https://shipitornot.com/pitch) · [Benchmark](https://shipitornot.com/bench) · [Recorded demo](https://shipitornot.com/run/demo) · [A real run](https://shipitornot.com/run/r_a650c3) · [Demo script](DEMO.md)
 
 <br>
 
@@ -35,6 +35,12 @@ Every point traces back to a file, a line and a quote.
 A VC gets a repo and a README full of claims, and an associate spends two days finding out what was really shipped. Hiring managers and acquirers have the same problem. In the AI age, plausible code is cheap, so reading the README tells you very little.
 
 README vs Reality does that diligence in a couple of minutes. You don't get a vibe, you get a score built from evidence you can click.
+
+**Why not just hand the repo to an agent?** Three things a chat cannot do:
+
+- **Comparable.** One rubric, computed by code, so every repo lands on the same scale. A chat gives a different essay each time.
+- **Verifiable.** The crew built it and ran it in a sandbox, and every point is a file, a line and a verbatim quote. A chat read the README.
+- **Compounds.** Every run writes memory and lands on the benchmark, so the thousandth repo scores faster, cheaper, and against a percentile of everything before it. A chat forgets.
 
 ## How a run works
 
@@ -106,6 +112,10 @@ A repo with no build system still gets 5 of 10 on compiles, and one with no test
 
 The pinned commits, setup timings and earlier runs are in [infra/demo-repos.md](infra/demo-repos.md).
 
+## Benchmark
+
+[shipitornot.com/bench](https://shipitornot.com/bench) reads every run on the backend and refreshes every ten seconds: a score histogram, mean and p90, where repos lose points by dimension, a ranked table with each repo's percentile and weakest dimension, and the money spent. The bulk window queues repos from [infra/bench-repos.json](infra/bench-repos.json), a curated spread of 100 public repos across four languages: 30 tiny and unknown, 40 mid, 30 famous but small enough to install in minutes. It asks twice before spending anything.
+
 ## Autonomy, disclosed
 
 **Autonomous:** everything after the URL. Clone, install, planning, exploration, build, tests, claims, blame, classification, scoring and the report all happen without anyone approving a step.
@@ -142,11 +152,11 @@ bash infra/run-repo.sh https://github.com/un33k/python-slugify   # start a run, 
 ## Repo layout
 
 ```
-frontend/           Next.js app: Mac desktop, run screen, pitch page
+frontend/           Next.js app: Mac desktop, run screen, pitch page, benchmark page, demo mode
 packages/contract/  shared event types and reducer
 backend/            Hono API on Cloud Run: runs, SSE, validator, scorer, writer, memory, key pool
 sandbox/            the Python crew that runs inside the job
-infra/              Google Cloud scripts, sandbox image, demo repos
+infra/              Google Cloud scripts, sandbox image, demo repos, the 100 benchmark repos
 specs/              the event contract and one spec per owner
 comms/              the status log the three of us kept during the build
 assets/avatars/     pixel sprites and the Mac frame
@@ -158,7 +168,7 @@ Built in one evening at **Moonfire Build Night**, London, 22 October 2026, for t
 
 | Who | Built |
 |---|---|
-| **Bergen** | the frontend, the Mac world and the pitch |
+| **Bergen** | the frontend, the Mac world, the shared contract, the benchmark page, the pixel crew and the pitch |
 | **Allen** | the backend, orchestrator, planner, explorers, claims, classifier and scoring |
 | **Akshay** | the Google Cloud setup, sandbox image and jobs, the compile, run and git agents, and the demo repos |
 

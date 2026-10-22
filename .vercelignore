@@ -1,0 +1,11 @@
+spike/
+backend/
+sandbox/
+infra/
+docs/
+comms/
+assets/
+specs/
+**/node_modules/
+**/.next/
+*.zip

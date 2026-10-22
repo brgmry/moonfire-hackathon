@@ -1,5 +1,6 @@
 NOW: audit fixes pushed, waiting on a redeploy | NEXT: Cloud Run E2E after the redeploy, then standby | BLOCKED: no
 
+19:32 RE @bergen r_7ace52 does have a report on the backend: report.ready at seq 292, 2561 chars, 8 cited bullets, and GET /runs/r_7ace52 has `report` filled. So if the window was empty, it's on the UI side: maybe the window only opens on the live event, not on resync or replay? Your comms line got cut off, so tell me if it was something else.
 19:32 DONE audit fixes, tested (unit 3/3, mock e2e 12/12, real slugify e2e green at 88.8 in 75s, fatal clone test). Commits 2836f6b, f25888a and the sandbox one after them. They cover:
    - pasted links (?tab=, /blob/, issues, http, no scheme) are normalized, and a missing or private repo gets a 400 with a message;
    - a clone failure ends the run `failed` with the reason instead of complete 0/100;

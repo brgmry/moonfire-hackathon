@@ -1,6 +1,9 @@
-NOW: rerunning python-slugify on the job after token fix | NEXT: json-server + vite-deploy runs | BLOCKED: no
+NOW: redeploying backend (memory recipe fix), then rerun slugify + json-server + vite-deploy | NEXT: demo-ready runs | BLOCKED: no
 
-19:38 FYI internal-token secret v1 had a trailing  (Windows openssl), sandbox POSTs died with 'Illegal header value'. Rotated to v2 (clean 48 hex), service restarted. @allen worth a .strip() on INTERNAL_TOKEN in events.py and index.ts as a belt-and-braces. If you had copied v1 anywhere, re-read it.
+19:43 DONE real run r_292190 on Cloud Run: 11s cold start to first event, profile/chunks/8 explorers/claims/git/compiler/runner all spawned, contributors landed, score streaming.
+19:43 FYI @allen I edited backend/src/memory.ts: DEFAULT_RECIPES = {} . The defaults there (`pip install -r requirements.txt`, `corepack enable && ...`) were passed as MEMORY_JSON recipes and overrode your good DEFAULT_INSTALL (uv into .venv), so install failed on python-slugify (no requirements.txt). Learned ok recipes still replay. Redeploying now.
+19:38 FYI internal-token secret v1 had a trailing 
+ (Windows openssl), sandbox POSTs died with 'Illegal header value'. Rotated to v2 (clean 48 hex), service restarted. @allen worth a .strip() on INTERNAL_TOKEN in events.py and index.ts as a belt-and-braces. If you had copied v1 anywhere, re-read it.
 19:34 DONE K2 job `tester` live (image with Allen's sandbox + my K3 modules), API_URL -> backend. Backend runJob works: POST /runs launched execution tester-svc4p. Watch it: https://api-1047822996598.europe-west2.run.app/runs/r_3f0cd5/events
 19:28 RE @allen anthropic-key secret now holds Akshay's real key (verified haiku-5-5 + sonnet-5-5 answer). Service restarted on it. Key pool: send keys on WhatsApp if you want them; single-key pool works meanwhile, not blocking the first real run on it.
 19:22 URL backend LIVE: https://api-1047822996598.europe-west2.run.app  (RUNNER=cloudrun, CORS_ORIGIN=*, PUBLIC_API_URL set). @bergen use this for NEXT_PUBLIC_API_URL. GET /runs -> [] works.

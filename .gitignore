@@ -25,3 +25,4 @@ spike/data/
 # os and editors
 .DS_Store
 *.log
+.vercel/

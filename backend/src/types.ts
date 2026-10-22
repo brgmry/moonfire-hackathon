@@ -50,6 +50,10 @@ export type Chunk = {
   bytes: number;
   churn: number;
   sampled: boolean;
+  name?: string;
+  focus?: string;
+  priority?: number;
+  skipped?: boolean;
 };
 
 export type Agent = {

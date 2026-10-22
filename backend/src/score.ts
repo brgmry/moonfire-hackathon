@@ -30,16 +30,42 @@ function top(fs: Finding[]): string[] {
   return [...fs].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]).slice(0, 3).map((f) => f.id);
 }
 
+// Paths the planner chose to skip (vendored, generated, docs, fixtures) are not code we failed to read.
+const isSkipped = (c: RunState["chunks"][number]) => c.skipped === true || c.priority === 0;
+
 export function coverage(s: RunState): { covered: number; total: number; sampled: number; chunks: number } {
-  const total = s.chunks.reduce((t, c) => t + (c.bytes || 0), 0);
-  const covered = s.chunks.filter((c) => !c.sampled).reduce((t, c) => t + (c.bytes || 0), 0);
-  return { covered, total, sampled: s.chunks.filter((c) => c.sampled).length, chunks: s.chunks.length };
+  const counted = s.chunks.filter((c) => !isSkipped(c));
+  const total = counted.reduce((t, c) => t + (c.bytes || 0), 0);
+  const covered = counted.filter((c) => !c.sampled).reduce((t, c) => t + (c.bytes || 0), 0);
+  return { covered, total, sampled: counted.filter((c) => c.sampled).length, chunks: counted.length };
+}
+
+// The image ships Python and Node only. Other toolchains are the sandbox's gap, not the repo's.
+const TOOLCHAIN: Record<string, string> = {
+  go: "Go", rs: "Rust", java: "Java", kt: "Kotlin", scala: "Scala", rb: "Ruby", php: "PHP", c: "C", cpp: "C++",
+  cs: "C#", swift: "Swift", ex: "Elixir", dart: "Dart", lua: "Lua", zig: "Zig",
+};
+const SUPPORTED_MANAGERS = new Set(["npm", "pnpm", "yarn", "bun", "pip", "uv", "poetry"]);
+
+export function unsupportedToolchain(s: RunState): string | null {
+  const pm = s.profile.packageManager;
+  if (pm === "cargo") return "Rust";
+  if (pm === "go") return "Go";
+  if (pm && SUPPORTED_MANAGERS.has(pm)) return null;
+  const top = Object.entries((s.profile.languages ?? {}) as Record<string, number>).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return top && TOOLCHAIN[top] ? TOOLCHAIN[top] : null;
 }
 
 export function score(s: RunState): { total: number; dimensions: Record<string, DimensionScore> } {
   const valid = s.findings.filter((f) => f.valid !== false);
   const byDim = (d: string) => valid.filter((f) => f.dimension === d);
-  const explored = valid.length > 0 || s.agents.some((a) => a.role === "explorer" && a.status === "done");
+  // Explorers that returned something, not ones that merely finished: a failed agent is no evidence.
+  const explorersRan = s.agents.filter((a) => a.role === "explorer" && a.status === "done" && (a.tokens?.out ?? 0) > 0).length;
+  const exploredChunks = Math.max(explorersRan, new Set(valid.map((f) => f.chunkId)).size);
+  const explored = exploredChunks > 0;
+  // Penalties per four explored chunks, so a big repo is not punished for having more code to find things in.
+  const norm = 1 / Math.max(1, exploredChunks / 4);
+  const toolchain = unsupportedToolchain(s);
   const cov = coverage(s);
   const scale = cov.sampled > 0 && cov.total > 0 ? cov.covered / cov.total : 1;
   const sampledNote = cov.sampled > 0 ? `sampled ${cov.chunks - cov.sampled} of ${cov.chunks} chunks` : undefined;
@@ -49,8 +75,9 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
   {
     const cs = s.claims;
     if (cs.length === 0) {
-      const noReadme = s.agents.some((a) => a.role === "claims" && a.status === "done");
-      d.claims = { points: 0, max: MAX.claims, top: [], note: noReadme ? "no README claims found" : undefined };
+      const agent = s.agents.find((a) => a.role === "claims");
+      const note = agent?.status !== "done" ? undefined : (agent.tokens?.out ?? 0) > 0 ? "no README claims found" : "claims agent did not finish";
+      d.claims = { points: 0, max: MAX.claims, top: [], note };
     } else {
       const delivered = cs.filter((c) => c.status === "delivered").length;
       const meanQ = cs.reduce((t, c) => t + (Number(c.quality) || 0), 0) / cs.length;
@@ -73,11 +100,12 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
       if (r.runs) points += 5;
       const passed = Number(r.testsPassed) || 0;
       const failed = Number(r.testsFailed) || 0;
-      if (r.kind === "api" && Number(r.endpointsTotal) > 0) {
-        points += 10 * (Number(r.endpointsOk) / Number(r.endpointsTotal));
-      } else if (passed + failed > 0) {
-        points += 10 * (passed / (passed + failed));
-      } else {
+      // The better of what answered over HTTP (api, web) and what the tests say.
+      const ratios: number[] = [];
+      if (Number(r.endpointsTotal) > 0) ratios.push(Number(r.endpointsOk) / Number(r.endpointsTotal));
+      if (passed + failed > 0) ratios.push(passed / (passed + failed));
+      if (ratios.length > 0) points += 10 * Math.max(...ratios);
+      else {
         points += 3;
         note = "no tests ran";
       }
@@ -91,7 +119,10 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
     let points = 0;
     let note: string | undefined;
     const warnings = Array.isArray(c?.warnings) ? c.warnings.length : Number(c?.warnings) || 0;
-    if (c?.compiles) {
+    if (c?.compiles && (!c.command || c.command === "none")) {
+      points = 5;
+      note = "no build system";
+    } else if (c?.compiles) {
       points = 7 + (warnings === 0 ? 3 : 0);
     } else if (s.profile.hasBuild === false && (Object.keys(c ?? {}).length > 0 || s.profile.name)) {
       points = 5;
@@ -113,9 +144,12 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
   // finding-driven dimensions only count once explorers have reported
   const fromFindings = (dim: string, base: number, wMajor: number, wMinor: number, wGood: number, scaled: boolean) => {
     const fs = byDim(dim);
-    if (!explored) return { points: 0, max: MAX[dim], top: [] };
+    if (!explored) {
+      const anyExplorer = s.agents.some((a) => a.role === "explorer" && a.status === "done");
+      return { points: 0, max: MAX[dim], top: [], note: anyExplorer ? "explorers returned nothing" : undefined };
+    }
     const n = counts(fs);
-    let points = clamp(base - wMajor * n.major - wMinor * n.minor + wGood * n.good, 0, base);
+    let points = clamp(base - norm * (wMajor * n.major + wMinor * n.minor) + norm * wGood * n.good, 0, base);
     if (scaled) points *= scale;
     return { points, max: MAX[dim], top: top(fs), note: scaled ? sampledNote : undefined };
   };
@@ -124,6 +158,18 @@ export function score(s: RunState): { total: number; dimensions: Record<string, 
   d.dead_code = fromFindings("dead_code", 5, 1, 0.25, 0, true);
   d.security = fromFindings("security", 5, 2, 0.5, 0, false);
   d.docs = fromFindings("docs", 5, 1, 0.25, 0, false);
+
+  // A toolchain the sandbox lacks: compiles and runs take the repo's average on everything we could judge.
+  if (toolchain) {
+    const judged = ["claims", "quality", "architecture", "dead_code", "security", "docs"].filter((k) => d[k]);
+    const avg = judged.reduce((t, k) => t + d[k].points / d[k].max, 0) / Math.max(1, judged.length);
+    const note = `${toolchain} toolchain not in the sandbox, scored at the repo's average`;
+    if (!s.compile?.compiles) d.compiles = { points: MAX.compiles * avg, max: MAX.compiles, top: [], note };
+    if (!s.run?.runs) d.runs = { points: MAX.runs * avg, max: MAX.runs, top: [], note };
+    const passed = Number(s.run?.testsPassed) || 0;
+    const failed = Number(s.run?.testsFailed) || 0;
+    if (passed + failed === 0) d.tests = { ...d.tests, points: (s.profile.hasTests ? 4 : 0) + 6 * avg, note };
+  }
 
   for (const k of Object.keys(d)) d[k].points = round1(d[k].points);
   const total = round1(Object.values(d).reduce((t, x) => t + x.points, 0));

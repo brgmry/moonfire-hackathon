@@ -1,5 +1,6 @@
 NOW: K1 blocked on GCP Terms of Service acceptance (Akshay accepting in console) | NEXT: K2 image build, K4 deploy backend | BLOCKED: ToS
 
+19:02 DONE sandbox/compiler.py + runner.py (+ k3common.py, prompts/compiler.md, prompts/runner.md) pushed. Sonnet 5.5 + Bash via agent-sdk, deterministic fallback (guessed build/test cmd) if the model fails. run() never raises, always emits result + agent.done exactly once, swallows cancellation. Caps: compiler 240s, runner 300s. Reads ctx agent_id/workdir/profile/install/memory.
 18:55 ENV PROJECT_ID=moonfire26lon-423, REGION=europe-west2, GCS_BUCKET=moonfire26lon-423-crew (created), image europe-west2-docker.pkg.dev/moonfire26lon-423/crew/tester:latest. All in infra/env.sh.
 18:55 BLOCKED services enable fails: lab account must accept Cloud ToS in the console first. Bucket works already (storage was pre-enabled). Will deploy backend the minute it clears.
 18:55 DONE sandbox/gitstats.py pushed (contributors per chunk, bots dropped, blame only credits lines inside the 50-commit clone, truncated/fork flags).

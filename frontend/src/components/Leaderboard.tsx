@@ -13,7 +13,12 @@ export function Leaderboard({ state, onAuthor, onClose }: { state: RunState; onA
           <table>
             <thead><tr><th>author</th><th>commits</th><th>lines</th><th>owns</th></tr></thead>
             <tbody>
-              {c.authors.slice().sort((a, b) => b.lines - a.lines).map((a) => (
+              {Object.values(c.authors.reduce<Record<string, typeof c.authors[number]>>((acc, a) => {
+                const k = a.name.trim().toLowerCase();
+                const prev = acc[k];
+                acc[k] = prev ? { ...prev, commits: prev.commits + a.commits, lines: prev.lines + a.lines, chunks: Object.entries(a.chunks).reduce((m, [id, n]) => ({ ...m, [id]: (m[id] ?? 0) + n }), { ...prev.chunks }) } : a;
+                return acc;
+              }, {})).sort((a, b) => b.lines - a.lines).map((a) => (
                 <tr key={a.email || a.name} className="clickable" onClick={() => onAuthor?.(Object.keys(a.chunks))} data-tip={`${a.name}: ${a.commits} commits, ${a.lines} surviving lines. click to see their chunk`}>
                   <td>{a.name}</td><td className="n">{a.commits}</td><td className="n">{a.lines}</td>
                   <td>{Object.keys(a.chunks).map((id) => `${pathOf(id)}${majors(id) ? ` (${majors(id)} major)` : ""}`).join(", ")}</td>

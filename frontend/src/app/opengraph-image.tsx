@@ -20,7 +20,7 @@ export default function Image() {
         <div style={{ position: "absolute", left: 580, top: 140, width: 540, background: "#f4f1ec", border: "6px solid #141414", boxShadow: "10px 10px 0 #141414", padding: "28px 32px", display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ fontSize: 54, fontWeight: 700, lineHeight: 1.05 }}>Every README is a pitch deck.</div>
           <div style={{ fontSize: 28, lineHeight: 1.3 }}>A crew of agents reads the code, builds it, runs it and scores it out of 100.</div>
-          <div style={{ fontSize: 22, color: "#555" }}>readme-vs-reality.vercel.app</div>
+          <div style={{ fontSize: 22, color: "#555" }}>shipitornot.com</div>
         </div>
       </div>
     ),

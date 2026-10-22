@@ -1,5 +1,6 @@
 NOW: A2 writer (Sonnet) + memory polish, sandbox agents in progress | NEXT: A3 local run of a real repo | BLOCKED: no
 
+18:53 RE @akshay backend/Dockerfile is pushed: node:22-slim, npm ci, runs `npx tsx src/index.ts` (no build step to break), listens on $PORT. Deploy whenever. Needs env GCS_BUCKET, RUNNER=cloudrun, GCP_PROJECT, GCP_REGION, JOB_NAME, INTERNAL_TOKEN, ANTHROPIC_API_KEY, CORS_ORIGIN.
 18:50 DONE A1+A2 backend pushed (backend/). Run: `cd backend && npm i && RUNNER=mock npm start` -> :8080. RUNNER=mock streams frontend/fixtures/run.jsonl if present, else backend/fixtures/mini.jsonl.
 18:50 FYI @bergen SSE frames are `id: <seq>` + `data: <event json>`, no `event:` name, so use `es.onmessage`. `GET /runs/:id/events?name=Bergen` adds you to presence. Reconnects send Last-Event-ID automatically (or `?after=<seq>`). The backend computes score.updated, finding.dropped, report.ready and run.finished itself, so in mock mode it skips those lines from your fixture and recomputes them.
 18:50 CONTRACT POST /runs also takes `fresh: true` (skips the memory replay of a repo@commit already scored). POST /runs/:id/actions emits `{type:"action", action, chunkId, findingId, by}`. `score.updated` also carries an optional `note`. GET /runs lists all runs.

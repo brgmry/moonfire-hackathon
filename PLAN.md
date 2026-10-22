@@ -34,6 +34,7 @@ Runner is an interface, three implementations, same shape:
 - `mock`: emits canned results from a fixture. Built first. Demo fallback.
 - `sparkles`: `POST /api/public/v1/sandboxes` with the target repo and the tester prompt, follow `/events/stream`, fetch `result.json` via `/files/download`.
 - `local`: `claude -p` in a temp dir on the laptop. Fallback if Sparkles is slow or blocked.
+- `cloudrun`: one Cloud Run job execution per claim on the Google lab account (image with git, python, node; `gcloud run jobs execute --args --wait`). Second fallback, and the Google Cloud story for Kimoon. Details in [docs/google-cloud.md](docs/google-cloud.md).
 
 Decision at 6:45pm: if a Sparkles run takes over 20 minutes or the API is blocked, switch to `local` and say so in the pitch.
 
@@ -88,7 +89,7 @@ Named in the pitch as "why this runs all night for the cost of a coffee".
 - Fixed prefixes on splitter, reviewer, writer and tester prompts so prompt caching hits on every call. Measure cache read vs write tokens from the API response and show the ratio on the report.
 - README trimmed to the first 400 lines plus any heading that contains install, usage, benchmark, test, quick start.
 - Splitter capped at 6 claims. Reviewer sees `logTail` only, never the full log.
-- Model split: Sonnet for splitter and tester, Opus only for the reviewer. Writer on Sonnet.
+- Model split: Sonnet for splitter and tester, Opus only for the reviewer. Writer on Sonnet. Gemini 3.5 Flash on Vertex is the cheap second opinion if we want the reviewer to be a different model family from the tester (a point for Adriaan: the checker is not the checked).
 - A token counter on the run: total in, total out, cache hits. One number on screen at the end.
 
 **Memory** (`runs/memory.json`, loaded into a short block in the orchestrator prompts)
@@ -107,7 +108,7 @@ Next.js, one page at `/run/<id>`, `next dev` behind the tunnel, no Vercel. One `
 ## Sandboxes (Akshay)
 - 5:00 sharp: one key, GitHub App installed on our org, one empty repo, one test sandbox. Time create → first event → done. Fire 4 at once to find the concurrency cap.
 - Find out how a sandbox gets the target repo: pass it in `repos` if the App can see public repos, else fork it into our org first and pass the fork. Test both. Whether the sandbox has outbound network for `pip install` and `npm install` is the single biggest unknown; test it in the first sandbox.
-- Build `runner/sparkles.ts` behind the runner interface. Then `runner/local.ts` behind the same interface.
+- Build `runner/sparkles.ts` behind the runner interface. Then `runner/local.ts` behind the same interface. `runner/cloudrun.ts` only if Sparkles fails the 5:00 test; the Agent Engine shell sandbox has outbound internet off by default, so Cloud Run jobs is the Google option that can clone and install.
 - Pre-pick 3 demo repos and 1 backup, all tested end to end by 7:00: installs under 60s, tests under 2 min, README with at least 4 concrete claims, no GPU, no Docker. One of them should have a claim that actually fails.
 
 ## Orchestrator (Allen)

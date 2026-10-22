@@ -1,12 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { coverage, MAX } from "./score.js";
 import type { RunState, Tokens } from "./types.js";
+import { coolDown, markExhausted, PRICE, ranked } from "./keys.js";
 
-// USD per million tokens, hard-coded tonight. cacheRead at a tenth of input.
-const PRICE: Record<string, { in: number; out: number; cacheRead: number }> = {
-  "claude-sonnet-5-5": { in: 2, out: 10, cacheRead: 0.2 },
-  "claude-haiku-5-5": { in: 0.1, out: 0.5, cacheRead: 0.01 },
-};
 const USD_TO_GBP = 0.76;
 const WRITER_MODEL = "claude-sonnet-5-5";
 
@@ -71,12 +67,13 @@ function templateBullets(s: RunState): string[] {
   return out;
 }
 
-export async function writeReport(s: RunState): Promise<{ markdown: string; usage: Tokens; tokens: Tokens }> {
-  let bullets: string[] = [];
-  const usage: Tokens = { in: 0, out: 0, cacheRead: 0 };
-  if (process.env.WRITER !== "off") {
+// One Sonnet call. Walks the key pool, most credit left first: rate limited keys cool down,
+// spent or rejected keys are marked exhausted, anything else falls back to the template.
+async function callWriter(s: RunState): Promise<{ text: string; usage: Tokens; key?: string } | null> {
+  const keys = ranked();
+  for (const k of keys.length > 0 ? keys : [undefined]) {
     try {
-      const client = new Anthropic();
+      const client = k ? new Anthropic({ apiKey: k.key }) : new Anthropic();
       const r = await client.messages.create({
         model: WRITER_MODEL,
         max_tokens: 4000,
@@ -84,15 +81,40 @@ export async function writeReport(s: RunState): Promise<{ markdown: string; usag
         system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: JSON.stringify(input(s)) }],
       } as any);
-      usage.in = r.usage.input_tokens;
-      usage.out = r.usage.output_tokens;
-      usage.cacheRead = r.usage.cache_read_input_tokens ?? 0;
-      if (r.stop_reason !== "refusal") {
-        const text = r.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
-        bullets = citedOnly(text, s);
-      }
+      const usage = { in: r.usage.input_tokens, out: r.usage.output_tokens, cacheRead: r.usage.cache_read_input_tokens ?? 0 };
+      const text = r.stop_reason === "refusal" ? "" : r.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+      return { text, usage, key: k?.name };
     } catch (err) {
-      console.error(JSON.stringify({ severity: "ERROR", msg: "writer call failed", err: String(err) }));
+      const name = k?.name;
+      if (err instanceof Anthropic.RateLimitError) {
+        if (name) coolDown(name);
+        continue;
+      }
+      if (
+        err instanceof Anthropic.AuthenticationError ||
+        err instanceof Anthropic.PermissionDeniedError ||
+        (err instanceof Anthropic.APIError && (err.status === 402 || /credit balance/i.test(err.message)))
+      ) {
+        if (name) markExhausted(name, err.message);
+        continue;
+      }
+      console.error(JSON.stringify({ severity: "ERROR", msg: "writer call failed", key: name, err: String(err) }));
+      return null;
+    }
+  }
+  return null;
+}
+
+export async function writeReport(s: RunState): Promise<{ markdown: string; usage: Tokens; tokens: Tokens; key?: string }> {
+  let bullets: string[] = [];
+  let usage: Tokens = { in: 0, out: 0, cacheRead: 0 };
+  let key: string | undefined;
+  if (process.env.WRITER !== "off") {
+    const r = await callWriter(s);
+    if (r) {
+      usage = r.usage;
+      key = r.key;
+      bullets = citedOnly(r.text, s);
     }
   }
   if (bullets.length === 0) bullets = templateBullets(s);
@@ -126,5 +148,5 @@ export async function writeReport(s: RunState): Promise<{ markdown: string; usag
     "",
     `${Math.round(tokens.in / 1000)}k in, ${Math.round(tokens.out / 1000)}k out, ${cacheShare}% cache hits, ${Math.round((tokens.costGbp ?? 0) * 100)}p`,
   ].join("\n");
-  return { markdown, usage, tokens };
+  return { markdown, usage, tokens, key };
 }

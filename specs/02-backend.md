@@ -25,8 +25,11 @@ Node 22, TypeScript, Hono. One container on Cloud Run (`--max-instances 1`, `--m
 - `GET /runs/:id` returns the state; `lastSeq` included.
 - Structured logs to stdout, one JSON line per event, so Cloud Logging shows the run.
 
+## Keys (`src/keys.ts`)
+Implements the key pool in `00-contract.md`. It loads `ANTHROPIC_API_KEYS` and `ANTHROPIC_KEY_BUDGETS` plus `keys.json` from the bucket. `ranked()` gives the healthy keys, most credit left first. `weights()` gives the sandbox its share string. `record()` runs on every `agent.done` except in mock runs, at the model's price, against `e.key` or the run's primary key. `markExhausted` and `coolDown` react to API errors, and `key.exhausted` events from the sandbox also mark a key exhausted. The local runner passes the whole pool to `sandbox/main.py`. The Cloud Run runner passes only the weights, since the job has the secret.
+
 ## Env
-`PORT`, `INTERNAL_TOKEN`, `ANTHROPIC_API_KEY`, `GCS_BUCKET`, `RUNNER`, `GCP_PROJECT`, `GCP_REGION=europe-west2`, `JOB_NAME=tester`, `CORS_ORIGIN`.
+`PORT`, `INTERNAL_TOKEN`, `ANTHROPIC_API_KEYS` (or `ANTHROPIC_API_KEY`), `ANTHROPIC_KEY_BUDGETS`, `GCS_BUCKET`, `RUNNER`, `GCP_PROJECT`, `GCP_REGION=europe-west2`, `JOB_NAME=tester`, `CORS_ORIGIN`.
 
 ## Done means
 Fixture streams by 5:45. Real score by 6:45. Replay after a restart works. `curl` from a phone on 4G reaches the Cloud Run URL and sees events.

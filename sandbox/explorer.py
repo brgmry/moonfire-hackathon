@@ -93,5 +93,5 @@ async def run(agent_id: str, chunk: dict, repo: str, do_not: list[str]) -> list[
             break
     if not findings and chunk["files"]:
         print(f"explorer {agent_id}: no findings for {chunk['path']} (files in chunk: {len(in_chunk)})", flush=True)
-    events.emit("agent.done", agentId=agent_id, tokens=tokens)
+    events.emit("agent.done", agentId=agent_id, **llm.done(tokens))
     return [f for f in findings if f["valid"]]

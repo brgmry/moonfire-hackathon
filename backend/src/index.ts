@@ -1,3 +1,4 @@
+import "./env.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
@@ -5,6 +6,7 @@ import { serve } from "@hono/node-server";
 import { appendEvent, createRun, getRun, listRuns, newRunId, restore, subscribe } from "./runs.js";
 import { headSha, loadMemory, lookup, repoKey } from "./memory.js";
 import { pickRunner } from "./runner/index.js";
+import { loadKeys, publicView } from "./keys.js";
 import type { Event, RunState } from "./types.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -29,6 +31,9 @@ app.use(
 );
 
 app.get("/healthz", (c) => c.text("ok"));
+
+// Credit left per key, no secrets.
+app.get("/keys", (c) => c.json(publicView()));
 
 app.get("/runs", (c) =>
   c.json(listRuns().map((s) => ({ id: s.id, repoUrl: s.repoUrl, status: s.status, score: s.score.total, lastSeq: s.lastSeq }))),
@@ -150,6 +155,7 @@ app.post("/internal/events", async (c) => {
 
 const restored = await restore();
 await loadMemory();
+await loadKeys();
 serve({ fetch: app.fetch, port: PORT }, () =>
   console.log(JSON.stringify({ severity: "INFO", msg: `backend on :${PORT}`, runner: process.env.RUNNER ?? "mock", restored })),
 );

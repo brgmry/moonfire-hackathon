@@ -46,4 +46,4 @@ async def run(agent_id: str, findings: list[dict]) -> None:
                                 note=str(v.get("note") or "")[:200])
 
     await asyncio.gather(*(batch(findings[i:i + BATCH]) for i in range(0, len(findings), BATCH)))
-    events.emit("agent.done", agentId=agent_id, tokens=tokens)
+    events.emit("agent.done", agentId=agent_id, **llm.done(tokens))

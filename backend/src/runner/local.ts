@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { appendEvent, finishById, getRun } from "../runs.js";
 import { memoryJson } from "../memory.js";
+import { allKeysEnv } from "../keys.js";
 import { sandboxEnv, type Runner } from "./index.js";
 import type { RunState } from "../types.js";
 
@@ -24,6 +25,7 @@ function launch(run: RunState, extra: Record<string, string> = {}) {
     API_URL: `http://localhost:${process.env.PORT ?? 8080}`,
     INTERNAL_TOKEN: process.env.INTERNAL_TOKEN ?? "dev",
     MEMORY_JSON: memoryJson(),
+    ...(allKeysEnv() ? { ANTHROPIC_API_KEYS: allKeysEnv() } : {}),
     WORKDIR: path.join(workdir, "work"),
     MAX_CHUNKS: process.env.MAX_CHUNKS ?? "24",
     MAX_PARALLEL: process.env.MAX_PARALLEL ?? "8",

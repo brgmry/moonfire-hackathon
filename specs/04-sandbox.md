@@ -12,6 +12,8 @@ gcloud storage buckets create gs://<PROJECT_ID>-crew --location=europe-west2
 printf '%s' "$ANTHROPIC_API_KEY" | gcloud secrets create anthropic-key --data-file=-
 openssl rand -hex 24 | gcloud secrets create internal-token --data-file=-
 ```
+Key pool (see `00-contract.md`): `printf '%s' 'allen:sk-ant-...,bergen:sk-ant-...,akshay:sk-ant-...' | gcloud secrets create anthropic-keys --data-file=-`. Mount it as `ANTHROPIC_API_KEYS=anthropic-keys:latest` on the job and on the service, and set `ANTHROPIC_KEY_BUDGETS` on the service.
+
 Put `PROJECT_ID`, bucket name and the Artifact Registry path in `infra/env.sh` (no secrets) and commit it. Everyone sources it. Done when the three of us can `gcloud run jobs list` on the project.
 
 ## K2. Sandbox image and job (5:20 to 6:00)

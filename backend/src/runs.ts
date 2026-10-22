@@ -5,6 +5,7 @@ import { validateFinding } from "./validate.js";
 import { writeReport } from "./writer.js";
 import { loadAll, persist } from "./store.js";
 import { learnFromEvent } from "./memory.js";
+import { markExhausted, primaryKeyName, record } from "./keys.js";
 import type { Event, RunState } from "./types.js";
 
 type Run = {
@@ -15,6 +16,7 @@ type Run = {
   doneCheck?: NodeJS.Timeout;
   finishing: boolean;
   timedOut: boolean;
+  primaryKey?: string;
 };
 
 const runs = new Map<string, Run>();
@@ -78,6 +80,14 @@ function react(run: Run, e: Event) {
   const id = run.state.id;
   learnFromEvent(run.state, e);
 
+  // Spend per key: agents name the key they used, otherwise it went on the run's primary key.
+  if (e.type === "sandbox.started") run.primaryKey ??= primaryKeyName();
+  if (e.type === "agent.done" && run.state.runner !== "mock") {
+    const a = run.state.agents.find((x) => x.agentId === e.agentId);
+    record(e.key ?? run.primaryKey, a?.model, e.tokens);
+  }
+  if (e.type === "key.exhausted" && e.key) markExhausted(e.key, e.error ?? "reported by the sandbox");
+
   if (e.type === "finding.added") {
     const reason = validateFinding(run.state, e.finding);
     if (reason) appendEvent(id, { type: "finding.dropped", findingId: e.finding.id, reason });
@@ -127,8 +137,8 @@ export async function finish(run: Run, reason?: string) {
     rescore(run);
     const writerId = "a_writer_01";
     appendEvent(id, { type: "agent.spawned", agentId: writerId, role: "writer", model: "claude-sonnet-5-5" });
-    const { markdown, usage, tokens } = await writeReport(run.state);
-    appendEvent(id, { type: "agent.done", agentId: writerId, tokens: usage });
+    const { markdown, usage, tokens, key } = await writeReport(run.state);
+    appendEvent(id, { type: "agent.done", agentId: writerId, tokens: usage, key });
     appendEvent(id, { type: "report.ready", score: run.state.score.total, dimensions: run.state.score.dimensions, markdown, tokens });
   } catch (err) {
     console.error(JSON.stringify({ severity: "ERROR", msg: "writer failed", runId: id, err: String(err) }));

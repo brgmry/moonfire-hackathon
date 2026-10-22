@@ -27,6 +27,9 @@ Done: real findings and claims from a real repo in the score by 6:45.
 ## A5. Classifier (stretch, 7:00 to 7:20)
 `sandbox/classifier.py`, Haiku 5.5, structured output. Runs after every explorer finishes, over all findings in batches of 20. Input per finding: `quote`, `note`, `file`. Output per finding: `{ id, dimension, severity, valid }` from the enums only, `valid: false` when the quote does not support the note. Disagreement on `dimension` or `severity` with the explorer, or `valid: false`, emits `finding.dropped` with `classifier_disagreed`. Emit `agent.spawned` / `agent.done` so the judge avatar shows on screen.
 
+## Keys (`sandbox/keys.py`)
+`keys.load()` runs first in `main.py`. Each `llm.ask` picks a key by `ANTHROPIC_KEY_WEIGHTS` and passes it to `query()` through `ClaudeAgentOptions(env=...)`. If the message stream reports `billing_error`, `authentication_failed` or `rate_limit`, the query moves to the next key. A dead key is reported as `key.exhausted`. `agent.done` carries the name of the key that paid.
+
 ## Prompts
 `sandbox/prompts/*.md`, one file per role, static. The only variable content goes in the user turn. Keep tool order identical across calls. This is what makes the cache ratio on screen real.
 

@@ -14,6 +14,8 @@ Change this file and tell the other two. Nothing else is shared.
 
 CORS: allow the Vercel origin and `http://localhost:3000`. SSE sets `Cache-Control: no-cache`, `X-Accel-Buffering: no`.
 
+Wire shape note: the sandbox may send `repo.profile`, `compile.done`, `run.done` and `contributors` with their fields flat, as listed below. The backend broadcasts them nested, as `packages/contract` types them: `{ profile }`, `{ result }`, `{ result }`, `{ contributors }`. `GET /runs/:id` returns the backend state plus `events`, so a client can rebuild state with the shared reducer.
+
 ## Event envelope
 ```json
 { "seq": 41, "ts": "2026-10-22T18:12:03.120Z", "runId": "r_8f3k", "type": "finding.added", "...": "payload" }
@@ -31,7 +33,8 @@ CORS: allow the Vercel origin and `http://localhost:3000`. SSE sets `Cache-Contr
 | `chunk.created` | `chunk: { id, path, files: [paths], bytes, churn, sampled: bool }` | orchestrator |
 | `agent.spawned` | `agentId, role, chunkId?, model` | orchestrator |
 | `agent.working` | `agentId, file` | any agent |
-| `agent.done` | `agentId, tokens: { in, out, cacheRead }` | any agent |
+| `agent.done` | `agentId, tokens: { in, out, cacheRead }, key?` (key name that paid) | any agent |
+| `key.exhausted` | `key, error: "billing_error" \| "authentication_failed"` | sandbox (the UI may ignore it) |
 | `finding.added` | `finding` (shape below) | explorer, classifier |
 | `finding.dropped` | `findingId, reason: "file_not_in_repo" \| "classifier_disagreed" \| "quote_not_found"` | backend, classifier |
 | `claim.added` | `claim` (shape below) | claims agent |
@@ -88,7 +91,16 @@ Findings with `valid: false` are excluded. Sampled chunks scale `quality`, `arch
 ```
 
 ## Sandbox environment variables
-`RUN_ID`, `REPO_URL`, `API_URL`, `INTERNAL_TOKEN`, `ANTHROPIC_API_KEY`, `MAX_CHUNKS=24`, `MAX_PARALLEL=8`, `GCS_BUCKET`.
+`RUN_ID`, `REPO_URL`, `API_URL`, `INTERNAL_TOKEN`, `ANTHROPIC_API_KEYS`, `ANTHROPIC_KEY_WEIGHTS`, `MAX_CHUNKS=24`, `MAX_PARALLEL=8`, `GCS_BUCKET`, `MEMORY_JSON`, optional `RERUN_CHUNK`. `ANTHROPIC_API_KEY` still works as a pool of one.
+
+## API key pool (three keys, balanced by credit left)
+We each bring a key and run on all three.
+- Secret `anthropic-keys` holds `allen:sk-ant-...,bergen:sk-ant-...,akshay:sk-ant-...`. It is mounted as `ANTHROPIC_API_KEYS` on the service and on the job.
+- `ANTHROPIC_KEY_BUDGETS=allen:25,bergen:25,akshay:10` on the service is the USD credit each key had at the start. No API reports a key's balance, so the backend tracks spend per key from token usage × the price table and keeps it in `gs://$GCS_BUCKET/keys.json`.
+- The backend writer uses the key with the most credit left. On a 429 it cools that key for 30s and tries the next. On 401, 403, 402 or "credit balance too low" it marks the key exhausted for an hour and tries the next.
+- Per execution the backend passes `ANTHROPIC_KEY_WEIGHTS=allen:0.52,bergen:0.31,akshay:0.17`: names and each key's share of the credit left, never the keys themselves. Every sandbox query picks a key by weight, so load and rate limits spread across the three accounts. On `billing_error` or `authentication_failed` the sandbox drops that key for the run and emits `key.exhausted`. On `rate_limit` it cools the key for 30s. Agents that do not pick per query get the highest-weight key as `ANTHROPIC_API_KEY`.
+- `agent.done` carries `key` (the key's name) so spend lands on the right person; without it the run's primary key pays.
+- `GET /keys` returns `[{ name, budgetUsd, spentUsd, remainingUsd, status: "ok" | "cooling" | "exhausted" | "spent" }]`, no secrets.
 
 ## Models
 `claude-sonnet-5-5`: orchestrator, compiler, runner, writer. `claude-haiku-5-5`: explorer, claims, classifier. Static system prompts, same tool order every call, so prompt caching hits.

@@ -78,5 +78,5 @@ async def run(agent_id: str, repo: str) -> list[dict]:
             claims.append(claim)
             if len(claims) >= MAX_CLAIMS:
                 break
-    events.emit("agent.done", agentId=agent_id, tokens=tokens)
+    events.emit("agent.done", agentId=agent_id, **llm.done(tokens))
     return claims

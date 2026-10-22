@@ -1,0 +1,802 @@
+[
+  {
+    "url": "https://github.com/FelineFantasy/catsay",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 2,
+    "why": "A cute ASCII cat library for Python that says, warns, thinks, and asks questions; obscure side project (2 stars)",
+    "risk": "Trivial; may have almost no tests"
+  },
+  {
+    "url": "https://github.com/mwiatrzyk/pydio",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 3,
+    "why": "Simple and functional dependency injection toolkit for Python; obscure side project (3 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/antonio-orionus/url-sanitize",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 3,
+    "why": "Remove tracking parameters and unwrap tracking redirects from URLs. ClearURLs-compatible library and CLI for J; obscure side project (3 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/omni-line/omni-audit",
+    "tier": "tiny",
+    "language": "go",
+    "stars": 3,
+    "why": "A fast, zero-config CLI to audit your projects for Dependency Confusion and supply chain risks across multiple; obscure side project (3 stars)",
+    "risk": "Young repo, unverified tests"
+  },
+  {
+    "url": "https://github.com/UltiRequiem/leap_year_utils",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 4,
+    "why": "Utilities for working with Leap Years; obscure side project (4 stars)",
+    "risk": "Possibly Deno-oriented, no npm test script"
+  },
+  {
+    "url": "https://github.com/ecklf/reddit-clawler",
+    "tier": "tiny",
+    "language": "rust",
+    "stars": 4,
+    "why": "A command-line tool written in Rust that crawls Reddit posts from a user or subreddit; obscure side project (4 stars)",
+    "risk": "Reddit network access needed for most behavior"
+  },
+  {
+    "url": "https://github.com/deepratna-awale/CivitAI-Model-Downloader",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 5,
+    "why": "Parallel download Civit AI models via csv, txt, url, model name, model id, model page, model download link. To; obscure side project (5 stars)",
+    "risk": "Network and API-key dependent; tests may be absent or need Civitai access"
+  },
+  {
+    "url": "https://github.com/UltiRequiem/read-from-fs",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 5,
+    "why": "Read a file from a point; obscure side project (5 stars)",
+    "risk": "Possibly Deno-oriented, no npm test script"
+  },
+  {
+    "url": "https://github.com/stdlib-js/nlp-porter-stemmer",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 5,
+    "why": "Extract the stem of a given word; obscure side project (5 stars)",
+    "risk": "Per-package repo, thin tooling; may need stdlib dev deps"
+  },
+  {
+    "url": "https://github.com/pencelheimer/lget",
+    "tier": "tiny",
+    "language": "rust",
+    "stars": 5,
+    "why": "Open-source license fetcher; obscure side project (5 stars)",
+    "risk": "Fetches licenses over network; tests may need internet"
+  },
+  {
+    "url": "https://github.com/fulviofreitas/eeroctl",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 6,
+    "why": "CLI for Eero mesh networks - automation-ready, human-friendly; obscure side project (6 stars)",
+    "risk": "Talks to Eero cloud; tests must be mocked or they fail"
+  },
+  {
+    "url": "https://github.com/UltiRequiem/six",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 6,
+    "why": "Limit the amount of times that setInterval will fire; obscure side project (6 stars)",
+    "risk": "Tiny and possibly Deno-oriented, not npm"
+  },
+  {
+    "url": "https://github.com/standard-config/prettier",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 6,
+    "why": "TypeScript-first Prettier config; obscure side project (6 stars)",
+    "risk": "Config package, little to test"
+  },
+  {
+    "url": "https://github.com/Sam3360/secretshield",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 7,
+    "why": "A security utility for detecting and redacting likely secrets at runtime, in source files, Git commits, and CI; obscure side project (7 stars)",
+    "risk": "Very young repo; test setup unknown"
+  },
+  {
+    "url": "https://github.com/adrian-bueno/create-sticker",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 7,
+    "why": "Library that adds a sticker effect to images with transparent backgrounds; obscure side project (7 stars)",
+    "risk": "May need canvas/sharp native modules"
+  },
+  {
+    "url": "https://github.com/frame-check/frame-check",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 9,
+    "why": "A static checker for dataframes!; obscure side project (9 stars)",
+    "risk": "Pulls pandas/numpy, install could be slow"
+  },
+  {
+    "url": "https://github.com/brandhaug/add-function-return-types",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 9,
+    "why": "A CLI tool to add explicit return types to TypeScript functions; obscure side project (9 stars)",
+    "risk": "Depends on ts-morph, heavier install"
+  },
+  {
+    "url": "https://github.com/jahredhope/html-render-webpack-plugin",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 9,
+    "why": "webpack plugin for rendering static HTML in a multi-config webpack build; obscure side project (9 stars)",
+    "risk": "Old webpack toolchain; peer dep conflicts"
+  },
+  {
+    "url": "https://github.com/iamsaquib8/dom-tree-rs",
+    "tier": "tiny",
+    "language": "rust",
+    "stars": 9,
+    "why": "Tiny, zero-dependency, never-panicking HTML parser: CSS selectors, HTMLMarkdown/text/JSON, reader mode and RAG; obscure side project (9 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/6uclz1/ableton-cli",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 10,
+    "why": "Python CLI to control and inspect Ableton Live via a local Remote Script; obscure side project (10 stars)",
+    "risk": "Needs Ableton Live remote script; only unit tests can run"
+  },
+  {
+    "url": "https://github.com/geetikayalotha/CacheCraft",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 10,
+    "why": "Deterministic cache toolkit - typed keys, TTL windows and observable eviction; obscure side project (10 stars)",
+    "risk": "Young repo, unverified test layout"
+  },
+  {
+    "url": "https://github.com/hamidrezaesh/ffd",
+    "tier": "tiny",
+    "language": "go",
+    "stars": 12,
+    "why": "Fast, Multi-segment file fetcher built with go; obscure side project (12 stars)",
+    "risk": "Network-based downloader; tests may need internet"
+  },
+  {
+    "url": "https://github.com/advnpzn/akipy",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 16,
+    "why": "Python library wrapper for Akinator; obscure side project (16 stars)",
+    "risk": "Wraps Akinator web API; live tests would need network"
+  },
+  {
+    "url": "https://github.com/MawCeron/justwrite",
+    "tier": "tiny",
+    "language": "go",
+    "stars": 16,
+    "why": "A distraction-free terminal text editor for prose  a centred page, one status line, and everything else behind; obscure side project (16 stars)",
+    "risk": "TUI; tests may need a tty"
+  },
+  {
+    "url": "https://github.com/blacklanternsecurity/nmappalyzer",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 18,
+    "why": "A lightweight Python 3 Nmap wrapper that doesn't try too hard. Gracefully handles any Nmap command, providing ; obscure side project (18 stars)",
+    "risk": "Wraps nmap binary, may not be installed in the container"
+  },
+  {
+    "url": "https://github.com/ThatXliner/unmarkd",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 18,
+    "why": "An extremely configurable markdown reverser for Python3; obscure side project (18 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/dan1elt0m/binarycookies",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 24,
+    "why": "Binary Cookies CLI and Python library; obscure side project (24 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/ahojukka5/gmshparser",
+    "tier": "tiny",
+    "language": "python",
+    "stars": 28,
+    "why": "Lightweight, dependency-free Python package for parsing ASCII Gmsh MSH files; obscure side project (28 stars)",
+    "risk": "Small repo, test suite quality unknown"
+  },
+  {
+    "url": "https://github.com/nyaomaru/changelog-bot",
+    "tier": "tiny",
+    "language": "node",
+    "stars": 30,
+    "why": "Automatic create changelog with AI.  It provides CLI and github actions.   https://www.npmjs.com/package/@nyao; obscure side project (30 stars)",
+    "risk": "Uses LLM at runtime; tests need to avoid API keys"
+  },
+  {
+    "url": "https://github.com/voska/qbo-cli",
+    "tier": "tiny",
+    "language": "go",
+    "stars": 37,
+    "why": "QuickBooks Online CLI for humans and AI agents; obscure side project (37 stars)",
+    "risk": "QuickBooks API; only unit tests runnable"
+  },
+  {
+    "url": "https://github.com/mirkolenz/makejinja",
+    "tier": "mid",
+    "language": "python",
+    "stars": 111,
+    "why": "Generate directory structures using Jinja templates with external data and custom plugins; real users, mixed polish (111 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/jlevy/strif",
+    "tier": "mid",
+    "language": "python",
+    "stars": 131,
+    "why": "A tiny, useful Python lib of string, file, and object utilities; real users, mixed polish (131 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/janluke/cloup",
+    "tier": "mid",
+    "language": "python",
+    "stars": 132,
+    "why": "Library to build command line interfaces based on Click. It extends click with: option groups, constraints on ; real users, mixed polish (132 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/achimnol/aiotools",
+    "tier": "mid",
+    "language": "python",
+    "stars": 168,
+    "why": "Idiomatic asyncio utilties; real users, mixed polish (168 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/eigenein/protobuf",
+    "tier": "mid",
+    "language": "python",
+    "stars": 291,
+    "why": "Python implementation of Protocol Buffers with dataclass-based schemas; real users, mixed polish (291 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/goodmami/wn",
+    "tier": "mid",
+    "language": "python",
+    "stars": 304,
+    "why": "A modern, interlingual wordnet interface for Python; real users, mixed polish (304 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/kz26/PyExcelerate",
+    "tier": "mid",
+    "language": "python",
+    "stars": 561,
+    "why": "Accelerated Excel XLSX Writing Library for Python 2/3; real users, mixed polish (561 stars)",
+    "risk": "Old project, Python 3.12 compat quirks possible"
+  },
+  {
+    "url": "https://github.com/danthedeckie/simpleeval",
+    "tier": "mid",
+    "language": "python",
+    "stars": 614,
+    "why": "Simple Safe Sandboxed Extensible Expression Evaluator for Python; real users, mixed polish (614 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/adamreisnz/replace-in-file",
+    "tier": "mid",
+    "language": "node",
+    "stars": 617,
+    "why": "A simple utility to quickly replace contents in one or more files; real users, mixed polish (617 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/nadimtuhin/claude-token-optimizer",
+    "tier": "mid",
+    "language": "node",
+    "stars": 628,
+    "why": "Cut the tokens Claude Code loads at session start. CLI that sets up a small CLAUDE.md with on-demand docs, mea; real users, mixed polish (628 stars)",
+    "risk": "Tool aimed at Claude Code config; tests may be sparse"
+  },
+  {
+    "url": "https://github.com/sindresorhus/figures",
+    "tier": "mid",
+    "language": "node",
+    "stars": 634,
+    "why": "Unicode symbols with fallbacks for older terminals; real users, mixed polish (634 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/unjs/std-env",
+    "tier": "mid",
+    "language": "node",
+    "stars": 643,
+    "why": "Runtime Agnostic Env Info; real users, mixed polish (643 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/75lb/command-line-args",
+    "tier": "mid",
+    "language": "node",
+    "stars": 719,
+    "why": "A mature, feature-complete library to parse command-line options; real users, mixed polish (719 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/mifi/ezshare",
+    "tier": "mid",
+    "language": "node",
+    "stars": 802,
+    "why": "Easily share files, folders and clipboard over LAN - Like Google Drive but without internet; real users, mixed polish (802 stars)",
+    "risk": "Monorepo with a Vite frontend, heavier build"
+  },
+  {
+    "url": "https://github.com/Klemen1337/node-thermal-printer",
+    "tier": "mid",
+    "language": "node",
+    "stars": 916,
+    "why": "Node.js module for Epson, Star, Tanca, Drauma, Custom and Brother thermal printers command line printing; real users, mixed polish (916 stars)",
+    "risk": "Printer hardware code; tests only partially runnable"
+  },
+  {
+    "url": "https://github.com/seanpmaxwell/express-generator-typescript",
+    "tier": "mid",
+    "language": "node",
+    "stars": 946,
+    "why": "CLI that generates a production-ready Express + TypeScript project  prettier, ESLint, and a working CRUD examp; real users, mixed polish (946 stars)",
+    "risk": "Generator tests may hit npm registry"
+  },
+  {
+    "url": "https://github.com/seachicken/gh-poi",
+    "tier": "mid",
+    "language": "go",
+    "stars": 1023,
+    "why": "Safely clean up your local branches; real users, mixed polish (1,023 stars)",
+    "risk": "Tests need git, some shell out to gh"
+  },
+  {
+    "url": "https://github.com/rust-cli/confy",
+    "tier": "mid",
+    "language": "rust",
+    "stars": 1040,
+    "why": "Zero-boilerplate configuration management in Rust; real users, mixed polish (1,040 stars)",
+    "risk": "Writes to config dirs in tests"
+  },
+  {
+    "url": "https://github.com/sclevine/yj",
+    "tier": "mid",
+    "language": "go",
+    "stars": 1060,
+    "why": "CLI - Convert between YAML, TOML, JSON, and HCL. Preserves map order; real users, mixed polish (1,060 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/dkorunic/betteralign",
+    "tier": "mid",
+    "language": "go",
+    "stars": 1087,
+    "why": "Detect and fix suboptimal struct field layout in Go: reduces padding and GC pointer bytes, rewrites files whil; real users, mixed polish (1,087 stars)",
+    "risk": "Pulls x/tools, fine but deps larger"
+  },
+  {
+    "url": "https://github.com/jarun/imgp",
+    "tier": "mid",
+    "language": "python",
+    "stars": 1096,
+    "why": ":camera_flash: Fast batch image resizer and rotator; real users, mixed polish (1,096 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/JakWai01/lurk",
+    "tier": "mid",
+    "language": "rust",
+    "stars": 1159,
+    "why": "A pretty (simple) alternative to strace; real users, mixed polish (1,159 stars)",
+    "risk": "Linux ptrace tests may fail in a container"
+  },
+  {
+    "url": "https://github.com/sibprogrammer/xq",
+    "tier": "mid",
+    "language": "go",
+    "stars": 1161,
+    "why": "Command-line XML and HTML beautifier and content extractor; real users, mixed polish (1,161 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/sindresorhus/pretty-ms",
+    "tier": "mid",
+    "language": "node",
+    "stars": 1218,
+    "why": "Convert milliseconds to a human readable string: `1337000000`  `15d 11h 23m 20s`; real users, mixed polish (1,218 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/dvcoolarun/web2pdf",
+    "tier": "mid",
+    "language": "python",
+    "stars": 1296,
+    "why": "CLI to convert Webpages to PDFs; real users, mixed polish (1,296 stars)",
+    "risk": "May need a headless browser or wkhtmltopdf"
+  },
+  {
+    "url": "https://github.com/msoap/shell2http",
+    "tier": "mid",
+    "language": "go",
+    "stars": 1509,
+    "why": "Executing shell commands via HTTP server; real users, mixed polish (1,509 stars)",
+    "risk": "Tests start HTTP servers on ports"
+  },
+  {
+    "url": "https://github.com/mike-engel/jwt-cli",
+    "tier": "mid",
+    "language": "rust",
+    "stars": 1521,
+    "why": "A super fast CLI tool to decode and encode JWTs built in Rust; real users, mixed polish (1,521 stars)",
+    "risk": "Rust compile time on 2 CPUs may approach the limit"
+  },
+  {
+    "url": "https://github.com/shinshin86/oh-my-logo",
+    "tier": "mid",
+    "language": "node",
+    "stars": 1605,
+    "why": "Display giant ASCII-art logos with colorful gradients in your terminal  like Claude Code or Gemini CLI; real users, mixed polish (1,605 stars)",
+    "risk": "Build step plus figlet fonts, low otherwise"
+  },
+  {
+    "url": "https://github.com/iojw/socialscan",
+    "tier": "mid",
+    "language": "python",
+    "stars": 1861,
+    "why": "Python library for accurately querying username and email usage on online platforms; real users, mixed polish (1,861 stars)",
+    "risk": "Tests query live sites over the network"
+  },
+  {
+    "url": "https://github.com/mahmoud/glom",
+    "tier": "mid",
+    "language": "python",
+    "stars": 2169,
+    "why": "Python's nested data operator (and CLI), for all your declarative restructuring needs. Got data? Glom it!; real users, mixed polish (2,169 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/Everduin94/better-commits",
+    "tier": "mid",
+    "language": "node",
+    "stars": 2284,
+    "why": "A CLI for creating better commits following the conventional commits specification; real users, mixed polish (2,284 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/vadimdemedes/pastel",
+    "tier": "mid",
+    "language": "node",
+    "stars": 2409,
+    "why": "Next.js-like framework for CLIs made with Ink; real users, mixed polish (2,409 stars)",
+    "risk": "Ink/React toolchain, ESM and TypeScript build"
+  },
+  {
+    "url": "https://github.com/tbillington/kondo",
+    "tier": "mid",
+    "language": "rust",
+    "stars": 2532,
+    "why": "Cleans dependencies and build artifacts from your projects; real users, mixed polish (2,532 stars)",
+    "risk": "Rust compile time moderate"
+  },
+  {
+    "url": "https://github.com/pndurette/gTTS",
+    "tier": "mid",
+    "language": "python",
+    "stars": 2638,
+    "why": "Python library and CLI tool to interface with Google Translate's text-to-speech API; real users, mixed polish (2,638 stars)",
+    "risk": "Tests call Google Translate TTS over the network"
+  },
+  {
+    "url": "https://github.com/sindresorhus/slugify",
+    "tier": "mid",
+    "language": "node",
+    "stars": 2709,
+    "why": "Slugify a string; real users, mixed polish (2,709 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/gruns/furl",
+    "tier": "mid",
+    "language": "python",
+    "stars": 2809,
+    "why": "The easiest way to parse and modify URLs in Python; real users, mixed polish (2,809 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/kislyuk/yq",
+    "tier": "mid",
+    "language": "python",
+    "stars": 3000,
+    "why": "Command-line YAML, XML, TOML processor - jq wrapper for YAML/XML/TOML documents; real users, mixed polish (3,000 stars)",
+    "risk": "Test suite shells out to jq and xq binaries"
+  },
+  {
+    "url": "https://github.com/guptarohit/asciigraph",
+    "tier": "mid",
+    "language": "go",
+    "stars": 3099,
+    "why": "Go package to make lightweight ASCII line graph  in command line apps with no other dependencies; real users, mixed polish (3,099 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/jarun/ddgr",
+    "tier": "mid",
+    "language": "python",
+    "stars": 3571,
+    "why": ":duck: DuckDuckGo from the terminal; real users, mixed polish (3,571 stars)",
+    "risk": "Live DuckDuckGo calls; tests are network-dependent"
+  },
+  {
+    "url": "https://github.com/sloria/doitlive",
+    "tier": "mid",
+    "language": "python",
+    "stars": 3580,
+    "why": "Because sometimes you need to do it live; real users, mixed polish (3,580 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/vercel/ms",
+    "tier": "famous",
+    "language": "node",
+    "stars": 5559,
+    "why": "Tiny millisecond conversion utility; widely used, small enough to build fast (5,559 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/isaacs/rimraf",
+    "tier": "famous",
+    "language": "node",
+    "stars": 5854,
+    "why": "A `rm -rf` util for nodejs; widely used, small enough to build fast (5,854 stars)",
+    "risk": "Tests use tap, platform-specific cases"
+  },
+  {
+    "url": "https://github.com/python-attrs/attrs",
+    "tier": "famous",
+    "language": "python",
+    "stars": 5858,
+    "why": "Python Classes Without Boilerplate; widely used, small enough to build fast (5,858 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/google/uuid",
+    "tier": "famous",
+    "language": "go",
+    "stars": 6146,
+    "why": "Go package for UUIDs based on RFC 4122 and DCE 1.1: Authentication and Security Services; widely used, small enough to build fast (6,146 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/dtolnay/anyhow",
+    "tier": "famous",
+    "language": "rust",
+    "stars": 6685,
+    "why": "Flexible concrete Error type built on std::error::Error; widely used, small enough to build fast (6,685 stars)",
+    "risk": "Ui tests via trybuild need nightly-style rustc output"
+  },
+  {
+    "url": "https://github.com/mahmoud/boltons",
+    "tier": "famous",
+    "language": "python",
+    "stars": 6939,
+    "why": "Like builtins, but boltons. 250+ constructs, recipes, and snippets which extend (and rely on nothing but) the ; widely used, small enough to build fast (6,939 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/marshmallow-code/marshmallow",
+    "tier": "famous",
+    "language": "python",
+    "stars": 7246,
+    "why": "A lightweight library for converting complex objects to and from simple Python datatypes; widely used, small enough to build fast (7,246 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/fatih/color",
+    "tier": "famous",
+    "language": "go",
+    "stars": 8003,
+    "why": "Color package for Go (golang); widely used, small enough to build fast (8,003 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/expressjs/morgan",
+    "tier": "famous",
+    "language": "node",
+    "stars": 8199,
+    "why": "HTTP request logger middleware for node.js; widely used, small enough to build fast (8,199 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/jprichardson/node-fs-extra",
+    "tier": "famous",
+    "language": "node",
+    "stars": 9593,
+    "why": "Node.js: extra methods for the fs object like copy(), remove(), mkdirs(); widely used, small enough to build fast (9,593 stars)",
+    "risk": "Large test suite, terminal-dependent assertions"
+  },
+  {
+    "url": "https://github.com/sindresorhus/ora",
+    "tier": "famous",
+    "language": "node",
+    "stars": 9769,
+    "why": "Elegant terminal spinner; widely used, small enough to build fast (9,769 stars)",
+    "risk": "ESM only, low otherwise"
+  },
+  {
+    "url": "https://github.com/sharkdp/hexyl",
+    "tier": "famous",
+    "language": "rust",
+    "stars": 10297,
+    "why": "A command-line hex viewer; widely used, small enough to build fast (10,297 stars)",
+    "risk": "Rust compile time moderate"
+  },
+  {
+    "url": "https://github.com/debug-js/debug",
+    "tier": "famous",
+    "language": "node",
+    "stars": 11458,
+    "why": "A tiny JavaScript debugging utility modelled after Node.js core's debugging technique. Works in Node.js and we; widely used, small enough to build fast (11,458 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/yargs/yargs",
+    "tier": "famous",
+    "language": "node",
+    "stars": 11505,
+    "why": "yargs the modern, pirate-themed successor to optimist; widely used, small enough to build fast (11,505 stars)",
+    "risk": "Large test matrix, build step"
+  },
+  {
+    "url": "https://github.com/pallets/jinja",
+    "tier": "famous",
+    "language": "python",
+    "stars": 11801,
+    "why": "A very fast and expressive template engine; widely used, small enough to build fast (11,801 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/dbader/schedule",
+    "tier": "famous",
+    "language": "python",
+    "stars": 12269,
+    "why": "Python job scheduling for humans; widely used, small enough to build fast (12,269 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/rs/zerolog",
+    "tier": "famous",
+    "language": "go",
+    "stars": 12518,
+    "why": "Zero Allocation JSON Logger; widely used, small enough to build fast (12,518 stars)",
+    "risk": "Large test suite, low"
+  },
+  {
+    "url": "https://github.com/XAMPPRocky/tokei",
+    "tier": "famous",
+    "language": "rust",
+    "stars": 15010,
+    "why": "Count your code, quickly; widely used, small enough to build fast (15,010 stars)",
+    "risk": "Rust compile time several minutes on 2 CPUs possible"
+  },
+  {
+    "url": "https://github.com/uuidjs/uuid",
+    "tier": "famous",
+    "language": "node",
+    "stars": 15341,
+    "why": "Generate RFC-compliant UUIDs in JavaScript; widely used, small enough to build fast (15,341 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/tidwall/gjson",
+    "tier": "famous",
+    "language": "go",
+    "stars": 15561,
+    "why": "Get JSON values quickly - JSON parser for Go; widely used, small enough to build fast (15,561 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/pallets/click",
+    "tier": "famous",
+    "language": "python",
+    "stars": 17800,
+    "why": "Python composable command line interface toolkit; widely used, small enough to build fast (17,800 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/joke2k/faker",
+    "tier": "famous",
+    "language": "python",
+    "stars": 19455,
+    "why": "Faker is a Python package that generates fake data for you; widely used, small enough to build fast (19,455 stars)",
+    "risk": "Large test suite, may exceed 3 min"
+  },
+  {
+    "url": "https://github.com/motdotla/dotenv",
+    "tier": "famous",
+    "language": "node",
+    "stars": 20549,
+    "why": "Loads environment variables from .env for nodejs projects; widely used, small enough to build fast (20,549 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/gorilla/mux",
+    "tier": "famous",
+    "language": "go",
+    "stars": 21834,
+    "why": "Package gorilla/mux is a powerful HTTP router and URL matcher for building Go web servers with; widely used, small enough to build fast (21,834 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/chalk/chalk",
+    "tier": "famous",
+    "language": "node",
+    "stars": 23333,
+    "why": "Terminal string styling done right; widely used, small enough to build fast (23,333 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/Delgan/loguru",
+    "tier": "famous",
+    "language": "python",
+    "stars": 24152,
+    "why": "Python logging made (stupidly) simple; widely used, small enough to build fast (24,152 stars)",
+    "risk": "Full tox matrix is heavy, plain pytest is fine"
+  },
+  {
+    "url": "https://github.com/ai/nanoid",
+    "tier": "famous",
+    "language": "node",
+    "stars": 27109,
+    "why": "A tiny (118 bytes), secure, URL-friendly, unique string ID generator for JavaScript; widely used, small enough to build fast (27,109 stars)",
+    "risk": "Monorepo-ish with benchmarks, tests fine"
+  },
+  {
+    "url": "https://github.com/tj/commander.js",
+    "tier": "famous",
+    "language": "node",
+    "stars": 28428,
+    "why": "node.js command-line interfaces made easy; widely used, small enough to build fast (28,428 stars)",
+    "risk": "low"
+  },
+  {
+    "url": "https://github.com/tqdm/tqdm",
+    "tier": "famous",
+    "language": "python",
+    "stars": 31359,
+    "why": ":zap: A Fast, Extensible Progress Bar for Python and CLI; widely used, small enough to build fast (31,359 stars)",
+    "risk": "Some tests slow or timing-dependent"
+  },
+  {
+    "url": "https://github.com/Textualize/rich",
+    "tier": "famous",
+    "language": "python",
+    "stars": 57597,
+    "why": "Rich is a Python library for rich text and beautiful formatting in the terminal; widely used, small enough to build fast (57,597 stars)",
+    "risk": "Large test suite, terminal-dependent assertions"
+  }
+]

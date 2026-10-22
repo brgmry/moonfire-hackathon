@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # works as script dir or package
-from k3common import (as_int, context_block, emit, final_tokens, parse_last_json, read_json,
+from k3common import (as_bool, as_int, context_block, emit, final_tokens, parse_last_json, read_json,
                       run_agent, sh, tail)
 
 TOTAL_CAP = 300      # whole agent, seconds
@@ -69,7 +69,11 @@ def guess_test(profile: dict, workdir: str) -> str | None:
         venv = wd / ".venv" / "bin" / "python"
         if venv.exists():  # orchestrator installs repo deps into .venv, which usually lacks pytest
             return f"({venv} -m pytest --version >/dev/null 2>&1 || uv pip install -q -p .venv pytest) && {venv} -m pytest -q"
-        return "python -m pytest -q"
+        # Install failed or made no .venv: build a throwaway one so the tests can import the repo.
+        reqs = " -r requirements.txt" if (wd / "requirements.txt").exists() else ""
+        pkg = " -e ." if (wd / "pyproject.toml").exists() or (wd / "setup.py").exists() else ""
+        return (f"uv venv -q /tmp/k3venv && uv pip install -q -p /tmp/k3venv pytest{reqs}{pkg}"
+                " && /tmp/k3venv/bin/python -m pytest -q")
     return None
 
 
@@ -118,7 +122,7 @@ async def fallback(ctx: dict, workdir: str, kind: str, note: str, budget: float)
 def normalise(r: dict, kind: str) -> dict:
     k = str(r.get("kind") or kind).lower()
     return {
-        "runs": bool(r.get("runs")),
+        "runs": as_bool(r.get("runs")),
         "kind": k if k in KINDS else kind,
         "testsPassed": as_int(r.get("testsPassed")),
         "testsFailed": as_int(r.get("testsFailed")),

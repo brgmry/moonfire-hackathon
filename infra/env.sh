@@ -7,4 +7,6 @@ export AR_REPO=europe-west2-docker.pkg.dev/moonfire26lon-423/crew
 export IMAGE=$AR_REPO/tester:latest
 export JOB_NAME=tester
 # Windows laptops: gcloud from the winget install
-[ -d "$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin" ] && export PATH="$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin:$PATH"
+if [ -d "$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin" ]; then
+  export PATH="$HOME/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin:$PATH"
+fi

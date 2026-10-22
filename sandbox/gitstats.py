@@ -13,7 +13,7 @@ import urllib.request
 
 from events import emit
 
-BOT_RE = re.compile(r"bot|dependabot|renovate|actions", re.I)
+BOT_RE = re.compile(r"\[bot\]|\bbot\b|dependabot|renovate|github-actions|\bactions@", re.I)
 BLAME_TIMEOUT = 2.0
 CHUNK_BUDGET = 20.0
 TOTAL_BUDGET = 120.0
@@ -40,12 +40,14 @@ async def _git(cwd: str, *args: str, timeout: float = 10.0) -> str | None:
         return None
     try:
         out, _ = await asyncio.wait_for(proc.communicate(), timeout)
-    except (asyncio.TimeoutError, asyncio.CancelledError):
+    except (asyncio.TimeoutError, asyncio.CancelledError) as e:
         try:
             proc.kill()
             await proc.wait()
         except Exception:
             pass
+        if isinstance(e, asyncio.CancelledError):
+            raise
         return None
     if proc.returncode != 0:
         return None
@@ -117,8 +119,9 @@ def _fetch_fork(owner: str, repo: str) -> bool:
 
 async def _fork(cwd: str) -> bool:
     try:
-        url = os.environ.get("REPO_URL") or (await _git(cwd, "remote", "get-url", "origin") or "")
-        m = re.search(r"github\.com[:/]+([^/\s]+)/([^/\s]+?)(?:\.git)?/?$", url.strip())
+        # REPO_URL may be pinned (.../tree/<ref>, #<sha>, @<ref>); origin is the clean URL.
+        url = (await _git(cwd, "remote", "get-url", "origin") or "") or os.environ.get("REPO_URL", "")
+        m = re.search(r"github\.com[:/]+([^/\s#?@]+)/([^/\s#?@]+?)(?:\.git)?(?:[/#?@].*)?$", url.strip())
         if not m:
             return False
         return await asyncio.wait_for(asyncio.to_thread(_fetch_fork, m.group(1), m.group(2)), 7)

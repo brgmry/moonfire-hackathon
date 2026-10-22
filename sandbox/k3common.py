@@ -115,8 +115,14 @@ async def sh(cmd: str, cwd: str, timeout: float) -> tuple[int, str, int]:
         cmd, cwd=cwd, env=sub_env(), stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         start_new_session=posix)
+    buf = bytearray()  # read incrementally so a timeout keeps what was printed before the hang
+
+    async def pump() -> None:
+        while chunk := await proc.stdout.read(65536):
+            buf.extend(chunk)
+
     try:
-        out, _ = await asyncio.wait_for(proc.communicate(), timeout)
+        await asyncio.wait_for(asyncio.gather(pump(), proc.wait()), timeout)
         code = proc.returncode or 0
     except (asyncio.TimeoutError, asyncio.CancelledError) as e:
         try:
@@ -124,12 +130,14 @@ async def sh(cmd: str, cwd: str, timeout: float) -> tuple[int, str, int]:
                 os.killpg(proc.pid, signal.SIGKILL)
             else:
                 proc.kill()
-        except Exception:  # noqa: BLE001
+            await asyncio.wait_for(proc.wait(), 5)
+        except BaseException:  # noqa: BLE001
             pass
         if isinstance(e, asyncio.CancelledError):
             raise
-        out, code = f"[timed out after {timeout}s]".encode(), 124
-    return code, out.decode("utf-8", "replace"), int((time.monotonic() - t0) * 1000)
+        buf.extend(f"\n[timed out after {timeout}s]".encode())
+        code = 124
+    return code, buf.decode("utf-8", "replace"), int((time.monotonic() - t0) * 1000)
 
 
 def dir_size(path: Path) -> int:
@@ -165,12 +173,14 @@ async def run_agent(name: str, user_prompt: str, workdir: str, agent_id: str,
                 elif isinstance(block, TextBlock) and block.text:
                     last_text = block.text
             u = msg.usage or {}
-            tokens["_in"] = tokens.get("_in", 0) + int(u.get("input_tokens") or 0)
+            # Same accounting as llm.add_usage: cache writes are billed input.
+            tokens["_in"] = tokens.get("_in", 0) + int(u.get("input_tokens") or 0) \
+                + int(u.get("cache_creation_input_tokens") or 0)
             tokens["_out"] = tokens.get("_out", 0) + int(u.get("output_tokens") or 0)
             tokens["_cr"] = tokens.get("_cr", 0) + int(u.get("cache_read_input_tokens") or 0)
         elif isinstance(msg, ResultMessage):
             u = msg.usage or {}
-            tokens["in"] = int(u.get("input_tokens") or 0)
+            tokens["in"] = int(u.get("input_tokens") or 0) + int(u.get("cache_creation_input_tokens") or 0)
             tokens["out"] = int(u.get("output_tokens") or 0)
             tokens["cacheRead"] = int(u.get("cache_read_input_tokens") or 0)
             tokens["_final"] = True
@@ -182,6 +192,13 @@ def final_tokens(tokens: dict) -> dict:
     if tokens.get("_final"):
         return {"in": tokens.get("in", 0), "out": tokens.get("out", 0), "cacheRead": tokens.get("cacheRead", 0)}
     return {"in": tokens.get("_in", 0), "out": tokens.get("_out", 0), "cacheRead": tokens.get("_cr", 0)}
+
+
+def as_bool(v) -> bool:
+    """Model JSON may say "false"/"no" as strings; bool() would call those True."""
+    if isinstance(v, str):
+        return v.strip().lower() in ("true", "yes", "1", "ok", "pass", "passed")
+    return bool(v)
 
 
 def as_int(v, default: int = 0) -> int:

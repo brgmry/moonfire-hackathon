@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # works as script dir or package
-from k3common import (as_int, context_block, dir_size, emit, final_tokens, parse_last_json,
+from k3common import (as_bool, as_int, context_block, dir_size, emit, final_tokens, parse_last_json,
                       read_json, run_agent, sh, tail)
 
 TOTAL_CAP = 240      # whole agent, seconds
@@ -55,7 +55,9 @@ async def fallback(ctx: dict, workdir: str, note: str, budget: float) -> dict:
         return {"compiles": True, "command": "none", "durationMs": 0, "buildSizeBytes": 0,
                 "warnings": 0, "errorsTail": tail(f"no build system found (fallback; {note})")}
     code, out, ms = await sh(cmd, workdir, max(10.0, min(BUILD_TIMEOUT, budget)))
-    warnings = sum(1 for line in out.splitlines() if re.search(r"warn", line, re.I))
+    warnings = sum(1 for line in out.splitlines()
+                   if re.search(r"\bwarn(ing)?s?\b", line, re.I)
+                   and not re.search(r"\b(0|no) warnings?\b|warnings?:\s*(0|none)\b", line, re.I))
     ok = code == 0
     return {"compiles": ok, "command": cmd, "durationMs": ms,
             "buildSizeBytes": build_size(workdir) if ok else 0, "warnings": min(warnings, 999),
@@ -64,7 +66,7 @@ async def fallback(ctx: dict, workdir: str, note: str, budget: float) -> dict:
 
 def normalise(r: dict) -> dict:
     return {
-        "compiles": bool(r.get("compiles")),
+        "compiles": as_bool(r.get("compiles")),
         "command": str(r.get("command") or "unknown")[:200],
         "durationMs": as_int(r.get("durationMs")),
         "buildSizeBytes": as_int(r.get("buildSizeBytes")),

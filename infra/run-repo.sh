@@ -15,5 +15,5 @@ for line in sys.stdin:
     t = e.get("type"); skip = {"seq","ts","runId","type","files"}
     print(e.get("seq"), (e.get("ts") or "")[11:19], t, json.dumps({k: v for k, v in e.items() if k not in skip})[:220], flush=True)
     if t == "run.finished": break
-'
+' || true  # curl exits 23 once the reader stops at run.finished
 date +"finished %T"

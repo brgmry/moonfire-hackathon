@@ -19,8 +19,10 @@ function python(): string {
 
 function launch(run: RunState, extra: Record<string, string> = {}) {
   const workdir = mkdtempSync(path.join(os.tmpdir(), `crew-${run.id}-`));
+  // The backend's own PORT and test-runner vars must not reach the repo under test.
+  const { PORT: _port, NODE_TEST_CONTEXT: _ntc, NODE_OPTIONS: _no, ...inherited } = process.env;
   const env = {
-    ...process.env,
+    ...inherited,
     ...sandboxEnv(run, extra),
     API_URL: `http://localhost:${process.env.PORT ?? 8080}`,
     INTERNAL_TOKEN: process.env.INTERNAL_TOKEN ?? "dev",

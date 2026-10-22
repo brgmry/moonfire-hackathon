@@ -10,7 +10,7 @@ import { loadKeys, publicView } from "./keys.js";
 import type { Event, RunState } from "./types.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
-const INTERNAL_TOKEN = process.env.INTERNAL_TOKEN ?? "dev";
+const INTERNAL_TOKEN = (process.env.INTERNAL_TOKEN ?? "dev").trim();
 const ORIGINS = (process.env.CORS_ORIGIN ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const runner = pickRunner();
 

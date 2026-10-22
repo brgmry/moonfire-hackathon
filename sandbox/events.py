@@ -40,7 +40,7 @@ def _post(events: list[dict]) -> None:
     if not api or api == "http://placeholder":
         return
     body = {"runId": os.environ.get("RUN_ID", "local"), "events": events}
-    headers = {"Authorization": f"Bearer {os.environ.get('INTERNAL_TOKEN', '')}"}
+    headers = {"Authorization": f"Bearer {os.environ.get('INTERNAL_TOKEN', '').strip()}"}
     for attempt in range(3):
         try:
             r = httpx.post(api.rstrip("/") + "/internal/events", json=body, headers=headers, timeout=10)

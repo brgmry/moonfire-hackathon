@@ -31,6 +31,19 @@ app.use(
   }),
 );
 
+// Site gate: when SITE_TOKEN is set, every public route needs it, as a bearer header or ?token= (EventSource cannot set headers).
+// /health and /internal/* are excluded: Cloud Run probes the first, sandboxes authenticate on the second with their own tokens.
+const SITE_TOKEN = (process.env.SITE_TOKEN ?? "").trim();
+app.use("*", async (c, next) => {
+  if (!SITE_TOKEN || c.req.method === "OPTIONS") return next();
+  const path = new URL(c.req.url).pathname;
+  if (path === "/health" || path === "/healthz" || path.startsWith("/internal/")) return next();
+  const given = (c.req.header("Authorization")?.replace(/^Bearer\s+/i, "") ?? c.req.query("token") ?? "").trim();
+  const a = Buffer.from(given), b = Buffer.from(SITE_TOKEN);
+  if (a.length === b.length && timingSafeEqual(a, b)) return next();
+  return c.json({ error: "password required" }, 401);
+});
+
 app.get("/healthz", (c) => c.text("ok"));
 // Cloud Run's front end answers /healthz itself, so probe /health there.
 app.get("/health", (c) => c.text("ok"));

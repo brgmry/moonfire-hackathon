@@ -38,6 +38,8 @@ export interface Chunk { id: string; path: string; files: string[]; bytes: numbe
 export interface Finding {
   id: string; agentId: string; chunkId: string; dimension: FindingDimension; severity: Severity;
   file: string; line: number; quote: string; note: string; valid: boolean;
+  /** git blame of file:line, filled by the sandbox when available. Who owns the mistake. */
+  author?: string; authorEmail?: string; commit?: string; authoredAt?: string;
 }
 export interface Claim {
   id: string; text: string; readmeLine: number; status: ClaimStatus; evidenceFile: string; quality: number; note?: string;
@@ -50,7 +52,7 @@ export interface RunResult {
 }
 export interface Author { name: string; email: string; commits: number; lines: number; chunks: Record<string, number> }
 export interface Contributors { authors: Author[]; truncated: boolean; fork: boolean }
-export interface DimensionScore { points: number; max: number; top: string[] }
+export interface DimensionScore { points: number; max: number; top: string[]; note?: string }
 
 /** Every event the backend numbers and broadcasts. Payload fields sit flat on the event. The sandbox sends these without `seq`. */
 export type EventPayload =
@@ -143,7 +145,7 @@ export function apply(s: RunState, e: RunEvent): RunState {
     case 'app.screenshot': return { ...n, screenshotUrl: e.url };
     case 'contributors': { const c = (e as RunEvent & { contributors?: Contributors }).contributors ?? { authors: e.authors ?? [], truncated: !!e.truncated, fork: !!e.fork }; return { ...n, contributors: c }; }
     case 'score.updated': {
-      const dimensions = { ...n.score.dimensions, [e.dimension]: { points: e.points, max: e.max, top: e.top } };
+      const dimensions = { ...n.score.dimensions, [e.dimension]: { points: e.points, max: e.max, top: e.top ?? [], note: e.note } };
       const total = Object.values(dimensions).reduce((acc, d) => acc + (d?.points ?? 0), 0);
       return { ...n, score: { total: Math.round(total * 10) / 10, dimensions } };
     }

@@ -1,6 +1,6 @@
 # Google Cloud for Build Night
 
-A temporary `@gcplab.me` account (username `devstar4231@gcplab.me`, credentials shared by the organisers, never put them in the repo) with one pre-assigned Google Cloud project, Gemini models via Vertex AI (now branded "Gemini Enterprise Agent Platform") and AI Studio. The whole environment is decommissioned at the end of the event (48-hour expiry): copy anything you want to keep out first.
+A temporary `@gcplab.me` account (credentials shared by the organisers, never put them in the repo) with one pre-assigned Google Cloud project, Gemini models via Vertex AI (now branded "Gemini Enterprise Agent Platform") and AI Studio. The whole environment is decommissioned at the end of the event (48-hour expiry): copy anything you want to keep out first.
 
 ## Login and setup
 

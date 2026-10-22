@@ -1,6 +1,6 @@
 # moonfire-hackathon
 
-Moonfire Build Night Hackathon, Thu 22 Oct 2026. Team: Bergen, Allen, Akshay.
+Moonfire Build Night Hackathon, Thu 22 Oct 2026. Team: Bergen (frontend, pitch), Allen (orchestrator, agent loop), Akshay (sandboxes, environments). Interface contract: [docs/contract.md](docs/contract.md).
 
 ## Our choice: Sparkles Cloud Crew Track (always-on-agents)
 

@@ -10,8 +10,10 @@ export function viewerName(): string {
 }
 
 export async function createRun(repoUrl: string): Promise<string> {
-  const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl, by: viewerName() }) });
-  if (!r.ok) throw new Error(`backend said ${r.status}`);
+  const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl, by: viewerName() }) })
+    .catch((x) => { throw new Error(`backend unreachable: ${(x as Error).message}`); });
+  // 400s carry a message meant for people ("... was not found, or it is private").
+  if (!r.ok) throw new Error((await r.json().catch(() => null))?.error ?? `backend said ${r.status}`);
   const j = await r.json();
   return j.id as string;
 }

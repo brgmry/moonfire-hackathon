@@ -13,10 +13,10 @@ export default function Home() {
   const router = useRouter();
   async function go(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^https?:\/\/github\.com\/[^/]+\/[^/]+/.test(url.trim())) { setErr("paste a github.com/owner/repo URL"); return; }
+    if (!/github\.com\/[^/\s]+\/[^/\s]+/i.test(url.trim())) { setErr("paste a github.com/owner/repo URL"); return; }
     setBusy(true); setErr("");
     try { router.push(`/run/${await createRun(url.trim())}`); }
-    catch (x) { setErr(`backend unreachable: ${(x as Error).message}`); setBusy(false); }
+    catch (x) { setErr((x as Error).message); setBusy(false); }
   }
   const menus: Menus = {
     File: [{ label: "Run the demo", tip: "the fixture run, no backend needed", onClick: () => router.push("/run/demo") }],

@@ -1,0 +1,64 @@
+{"ts": "2026-10-22T18:00:00Z", "type": "run.created", "repoUrl": "https://github.com/acme/pulse-cli", "by": "Bergen"}
+{"ts": "2026-10-22T18:00:00.300000Z", "type": "presence.join", "name": "Bergen"}
+{"ts": "2026-10-22T18:00:00.800000Z", "type": "presence.join", "name": "judge-7"}
+{"ts": "2026-10-22T18:00:01.200000Z", "type": "sandbox.started", "executionId": "exec-fixture", "runner": "mock"}
+{"ts": "2026-10-22T18:00:02.100000Z", "type": "repo.profile", "name": "acme/pulse-cli", "defaultBranch": "main", "commit": "a1b2c3d", "stars": 412, "languages": {"ts": 71, "py": 29}, "packageManager": "pnpm", "framework": "none", "hasTests": true, "hasBuild": true, "hasDockerfile": false, "fileCount": 184, "files": ["package.json", "tsconfig.json", "src/cli/index.ts", "src/api/auth.ts", "src/core/scheduler.ts", "src/utils/legacy.ts", "tests/scheduler.test.ts", "scripts/release.sh", "docs/index.md"]}
+{"ts": "2026-10-22T18:00:03.600000Z", "type": "install.done", "ok": true, "manager": "pnpm", "durationMs": 23400, "errorsTail": ""}
+{"ts": "2026-10-22T18:00:04.200000Z", "type": "chunk.created", "chunk": {"id": "c1", "path": "src/cli", "files": ["src/cli/index.ts"], "bytes": 42000, "churn": 31, "sampled": false}}
+{"ts": "2026-10-22T18:00:04.450000Z", "type": "chunk.created", "chunk": {"id": "c2", "path": "src/api", "files": ["src/api/auth.ts"], "bytes": 61000, "churn": 58, "sampled": false}}
+{"ts": "2026-10-22T18:00:04.700000Z", "type": "chunk.created", "chunk": {"id": "c3", "path": "src/core", "files": ["src/core/scheduler.ts"], "bytes": 88000, "churn": 74, "sampled": false}}
+{"ts": "2026-10-22T18:00:04.950000Z", "type": "chunk.created", "chunk": {"id": "c4", "path": "src/utils", "files": ["src/utils/legacy.ts"], "bytes": 30000, "churn": 4, "sampled": false}}
+{"ts": "2026-10-22T18:00:05.200000Z", "type": "chunk.created", "chunk": {"id": "c5", "path": "tests", "files": ["tests/scheduler.test.ts"], "bytes": 36000, "churn": 22, "sampled": false}}
+{"ts": "2026-10-22T18:00:05.450000Z", "type": "chunk.created", "chunk": {"id": "c6", "path": "scripts", "files": ["scripts/release.sh"], "bytes": 14000, "churn": 2, "sampled": false}}
+{"ts": "2026-10-22T18:00:05.700000Z", "type": "chunk.created", "chunk": {"id": "c7", "path": "docs", "files": ["docs/index.md"], "bytes": 22000, "churn": 1, "sampled": true}}
+{"ts": "2026-10-22T18:00:06.300000Z", "type": "agent.spawned", "agentId": "a0", "role": "orchestrator", "model": "claude-sonnet-5-5"}
+{"ts": "2026-10-22T18:00:06.800000Z", "type": "agent.spawned", "agentId": "a1", "role": "explorer", "chunkId": "c1", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:07.100000Z", "type": "agent.spawned", "agentId": "a2", "role": "explorer", "chunkId": "c2", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:07.400000Z", "type": "agent.spawned", "agentId": "a3", "role": "explorer", "chunkId": "c3", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:07.700000Z", "type": "agent.spawned", "agentId": "a4", "role": "explorer", "chunkId": "c4", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:08Z", "type": "agent.spawned", "agentId": "a5", "role": "explorer", "chunkId": "c5", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:08.300000Z", "type": "agent.spawned", "agentId": "a6", "role": "explorer", "chunkId": "c6", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:08.700000Z", "type": "agent.spawned", "agentId": "k", "role": "claims", "model": "claude-haiku-5-5"}
+{"ts": "2026-10-22T18:00:08.900000Z", "type": "agent.spawned", "agentId": "cmp", "role": "compiler", "model": "claude-sonnet-5-5"}
+{"ts": "2026-10-22T18:00:09.100000Z", "type": "agent.spawned", "agentId": "run", "role": "runner", "model": "claude-sonnet-5-5"}
+{"ts": "2026-10-22T18:00:09.300000Z", "type": "agent.spawned", "agentId": "git", "role": "git", "model": "none"}
+{"ts": "2026-10-22T18:00:10.200000Z", "type": "agent.working", "agentId": "a3", "file": "src/core/scheduler.ts"}
+{"ts": "2026-10-22T18:00:10.900000Z", "type": "finding.added", "finding": {"id": "f1", "agentId": "a4", "chunkId": "c4", "dimension": "dead_code", "severity": "major", "file": "src/utils/legacy.ts", "line": 14, "quote": "export function legacyToken(u: User) {", "note": "exported, never imported anywhere in the repo", "valid": true}}
+{"ts": "2026-10-22T18:00:12.100000Z", "type": "finding.added", "finding": {"id": "f2", "agentId": "a3", "chunkId": "c3", "dimension": "architecture", "severity": "good", "file": "src/core/scheduler.ts", "line": 8, "quote": "export class Scheduler implements Clock {", "note": "clock injected, scheduler is testable without timers", "valid": true}}
+{"ts": "2026-10-22T18:00:13.100000Z", "type": "finding.added", "finding": {"id": "f3", "agentId": "a2", "chunkId": "c2", "dimension": "security", "severity": "major", "file": "src/api/auth.ts", "line": 42, "quote": "const token = req.query.token as string", "note": "bearer token read from the query string and logged on line 47", "valid": true}}
+{"ts": "2026-10-22T18:00:14Z", "type": "agent.working", "agentId": "a1", "file": "src/cli/index.ts"}
+{"ts": "2026-10-22T18:00:14.800000Z", "type": "finding.added", "finding": {"id": "f4", "agentId": "a1", "chunkId": "c1", "dimension": "quality", "severity": "minor", "file": "src/cli/index.ts", "line": 120, "quote": "} catch (e) { /* ignore */ }", "note": "swallowed error on config parse", "valid": true}}
+{"ts": "2026-10-22T18:00:15.400000Z", "type": "finding.added", "finding": {"id": "f9", "agentId": "a6", "chunkId": "c6", "dimension": "quality", "severity": "major", "file": "src/ghost/nowhere.ts", "line": 1, "quote": "import x from 'y'", "note": "hallucinated file, the backend drops this one", "valid": true}}
+{"ts": "2026-10-22T18:00:15.800000Z", "type": "finding.dropped", "findingId": "f9", "reason": "file_not_in_repo"}
+{"ts": "2026-10-22T18:00:16.700000Z", "type": "claim.added", "claim": {"id": "k1", "text": "Installs with a single pnpm command", "readmeLine": 12, "status": "delivered", "evidenceFile": "package.json", "quality": 5}}
+{"ts": "2026-10-22T18:00:17.100000Z", "type": "claim.added", "claim": {"id": "k2", "text": "Supports OAuth login with Google and GitHub", "readmeLine": 31, "status": "partial", "evidenceFile": "src/api/auth.ts", "quality": 2, "note": "GitHub provider is a stub returning 501"}}
+{"ts": "2026-10-22T18:00:17.500000Z", "type": "claim.added", "claim": {"id": "k3", "text": "Zero-config TypeScript builds", "readmeLine": 40, "status": "delivered", "evidenceFile": "tsconfig.json", "quality": 4}}
+{"ts": "2026-10-22T18:00:17.900000Z", "type": "claim.added", "claim": {"id": "k4", "text": "Plugin system with hot reload", "readmeLine": 58, "status": "missing", "evidenceFile": "", "quality": 0, "note": "no plugin loader in src, plugins dir absent"}}
+{"ts": "2026-10-22T18:00:18.300000Z", "type": "claim.added", "claim": {"id": "k5", "text": "100% test coverage", "readmeLine": 72, "status": "partial", "evidenceFile": "tests/", "quality": 2, "note": "coverage report says 61%"}}
+{"ts": "2026-10-22T18:00:18.900000Z", "type": "score.updated", "dimension": "claims", "points": 16, "max": 25, "top": ["k4", "k2", "k5"]}
+{"ts": "2026-10-22T18:00:19.700000Z", "type": "finding.added", "finding": {"id": "f5", "agentId": "a5", "chunkId": "c5", "dimension": "tests", "severity": "good", "file": "tests/scheduler.test.ts", "line": 3, "quote": "describe(\"Scheduler\", () => {", "note": "core scheduler covered, 18 cases", "valid": true}}
+{"ts": "2026-10-22T18:00:20.400000Z", "type": "finding.added", "finding": {"id": "f6", "agentId": "a6", "chunkId": "c6", "dimension": "docs", "severity": "minor", "file": "scripts/release.sh", "line": 1, "quote": "#!/bin/bash", "note": "release script undocumented in README", "valid": true}}
+{"ts": "2026-10-22T18:00:21.600000Z", "type": "compile.done", "compiles": true, "command": "pnpm build", "durationMs": 41200, "buildSizeBytes": 2300000, "warnings": 3, "errorsTail": ""}
+{"ts": "2026-10-22T18:00:22.100000Z", "type": "score.updated", "dimension": "compiles", "points": 7, "max": 10, "top": []}
+{"ts": "2026-10-22T18:00:23.500000Z", "type": "run.done", "runs": true, "kind": "cli", "testsPassed": 38, "testsFailed": 3, "endpointsOk": 0, "endpointsTotal": 0, "errorsTail": "FAIL src/cli/index.test.ts > parses config"}
+{"ts": "2026-10-22T18:00:23.900000Z", "type": "score.updated", "dimension": "runs", "points": 14, "max": 15, "top": []}
+{"ts": "2026-10-22T18:00:24.200000Z", "type": "score.updated", "dimension": "tests", "points": 10, "max": 10, "top": ["f5"]}
+{"ts": "2026-10-22T18:00:24.800000Z", "type": "score.updated", "dimension": "quality", "points": 13, "max": 15, "top": ["f4"]}
+{"ts": "2026-10-22T18:00:25.100000Z", "type": "score.updated", "dimension": "architecture", "points": 9, "max": 10, "top": ["f2"]}
+{"ts": "2026-10-22T18:00:25.400000Z", "type": "score.updated", "dimension": "dead_code", "points": 4, "max": 5, "top": ["f1"]}
+{"ts": "2026-10-22T18:00:25.700000Z", "type": "score.updated", "dimension": "security", "points": 3, "max": 5, "top": ["f3"]}
+{"ts": "2026-10-22T18:00:26Z", "type": "score.updated", "dimension": "docs", "points": 4, "max": 5, "top": ["f6"]}
+{"ts": "2026-10-22T18:00:26.800000Z", "type": "contributors", "authors": [{"name": "M. Okafor", "email": "m@acme.dev", "commits": 212, "lines": 6120, "chunks": {"c3": 4100, "c2": 2020}}, {"name": "J. Lindqvist", "email": "j@acme.dev", "commits": 88, "lines": 2410, "chunks": {"c1": 1600, "c5": 810}}, {"name": "R. Patel", "email": "r@acme.dev", "commits": 31, "lines": 940, "chunks": {"c4": 600, "c6": 340}}], "truncated": true, "fork": false}
+{"ts": "2026-10-22T18:00:27.400000Z", "type": "agent.done", "agentId": "a1", "tokens": {"in": 41000, "out": 2100, "cacheRead": 30000}}
+{"ts": "2026-10-22T18:00:27.600000Z", "type": "agent.done", "agentId": "a2", "tokens": {"in": 52000, "out": 2600, "cacheRead": 39000}}
+{"ts": "2026-10-22T18:00:27.800000Z", "type": "agent.done", "agentId": "a3", "tokens": {"in": 71000, "out": 3300, "cacheRead": 51000}}
+{"ts": "2026-10-22T18:00:28Z", "type": "agent.done", "agentId": "a4", "tokens": {"in": 28000, "out": 1400, "cacheRead": 20000}}
+{"ts": "2026-10-22T18:00:28.200000Z", "type": "agent.done", "agentId": "a5", "tokens": {"in": 33000, "out": 1700, "cacheRead": 24000}}
+{"ts": "2026-10-22T18:00:28.400000Z", "type": "agent.done", "agentId": "a6", "tokens": {"in": 15000, "out": 900, "cacheRead": 11000}}
+{"ts": "2026-10-22T18:00:28.700000Z", "type": "agent.done", "agentId": "k", "tokens": {"in": 22000, "out": 1900, "cacheRead": 15000}}
+{"ts": "2026-10-22T18:00:28.900000Z", "type": "agent.done", "agentId": "cmp", "tokens": {"in": 18000, "out": 1200, "cacheRead": 12000}}
+{"ts": "2026-10-22T18:00:29.100000Z", "type": "agent.done", "agentId": "run", "tokens": {"in": 24000, "out": 1500, "cacheRead": 16000}}
+{"ts": "2026-10-22T18:00:29.300000Z", "type": "agent.done", "agentId": "git", "tokens": {"in": 0, "out": 0, "cacheRead": 0}}
+{"ts": "2026-10-22T18:00:30.500000Z", "type": "report.ready", "score": 80, "dimensions": {"claims": {"points": 16, "max": 25, "top": ["k4", "k2", "k5"]}, "runs": {"points": 14, "max": 15, "top": []}, "compiles": {"points": 7, "max": 10, "top": []}, "quality": {"points": 13, "max": 15, "top": ["f4"]}, "architecture": {"points": 9, "max": 10, "top": ["f2"]}, "tests": {"points": 10, "max": 10, "top": ["f5"]}, "dead_code": {"points": 4, "max": 5, "top": ["f1"]}, "security": {"points": 3, "max": 5, "top": ["f3"]}, "docs": {"points": 4, "max": 5, "top": ["f6"]}}, "markdown": "Claims: 2 of 5 delivered in full, the plugin system in README line 58 does not exist in src. Runs: 38 of 41 tests pass; the three failures are in src/cli/index.ts config parsing. Compiles in 41s to 2.3MB with 3 warnings. Quality: one swallowed error in src/cli/index.ts, otherwise consistent. Architecture: injected clock in src/core/scheduler.ts makes the core testable. Tests: scheduler covered in tests/scheduler.test.ts, API untested. Dead code: src/utils/legacy.ts exports nothing used. Security: a bearer token is read from the query string in src/api/auth.ts and logged.", "tokens": {"in": 412000, "out": 38000, "cacheRead": 292000, "costGbp": 0.38}}
+{"ts": "2026-10-22T18:00:31Z", "type": "agent.done", "agentId": "a0", "tokens": {"in": 9000, "out": 1200, "cacheRead": 6000}}
+{"ts": "2026-10-22T18:00:31.300000Z", "type": "run.finished", "status": "complete"}

@@ -1,4 +1,4 @@
-// Fixture backend. Same API as specs/00-contract.md, fed by packages/contract/fixtures/run.jsonl.
+// Fixture backend. Same API as specs/00-contract.md, fed by frontend/fixtures/run.jsonl (flat payloads, ts carries timing).
 // Usage: npm run fixture   (listens on :4000). POST /runs starts a new replay; every client sees the same run.
 import http from 'node:http';
 import { readFileSync } from 'node:fs';
@@ -7,7 +7,8 @@ import path from 'node:path';
 import { reduceAll } from '../../packages/contract/src/index.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const lines = readFileSync(path.join(here, '../../packages/contract/fixtures/run.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+const raw = readFileSync(path.join(here, '../fixtures/run.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+const lines = raw.map((event, i) => ({ delayMs: i === 0 ? 0 : Date.parse(event.ts) - Date.parse(raw[i - 1].ts), event }));
 const PORT = Number(process.env.PORT || 4000);
 const runs = new Map(); // id -> { events: [], clients: Set, timers: [] }
 
@@ -18,10 +19,11 @@ function startRun(id, repoUrl, by) {
   for (const { delayMs, event } of lines) {
     t += delayMs;
     run.timers.push(setTimeout(() => {
-      const e = { ...event, runId: id, seq: run.events.length + 1, ts: new Date().toISOString() };
+      const { ts: _ts, ...rest } = event; void _ts;
+      const e = { ...rest, runId: id, seq: run.events.length + 1, ts: new Date().toISOString() };
       if (e.type === 'run.created') { e.repoUrl = repoUrl; e.by = by; }
       run.events.push(e);
-      const line = `data: ${JSON.stringify(e)}\n\n`;
+      const line = `id: ${e.seq}\ndata: ${JSON.stringify(e)}\n\n`;
       for (const res of run.clients) res.write(line);
     }, t));
   }

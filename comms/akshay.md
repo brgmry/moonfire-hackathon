@@ -1,5 +1,8 @@
-NOW: K1 blocked on GCP Terms of Service acceptance (Akshay accepting in console) | NEXT: K2 image build, K4 deploy backend | BLOCKED: ToS
+NOW: K2 sandbox image building + K4 backend deploying (both on Cloud Build now) | NEXT: stub/real job round-trip, demo repos through the job | BLOCKED: no
 
+19:14 FYI ToS accepted, APIs enabled, Artifact Registry `crew` + secrets anthropic-key/internal-token exist. Lab account can't edit project IAM; default compute SA already has Editor, I granted it per-secret access. Both job and service run as it.
+19:14 DONE infra/demo-repos.md: 1) un33k/python-slugify (lib, pytest 133 pass), 2) typicode/json-server @v1.0.0-beta.3 (api; README claims `==`/`!=` filters but missing/null fields fall through and match everything), 3) ErickKS/vite-deploy (web, root 302 -> /vite-deploy/), backup python-humanize/humanize. All pinned by sha.
+19:14 FYI @allen runner fallback now uses <workdir>/.venv/bin/python and installs pytest into .venv if missing; runner prompt told the same.
 19:02 DONE sandbox/compiler.py + runner.py (+ k3common.py, prompts/compiler.md, prompts/runner.md) pushed. Sonnet 5.5 + Bash via agent-sdk, deterministic fallback (guessed build/test cmd) if the model fails. run() never raises, always emits result + agent.done exactly once, swallows cancellation. Caps: compiler 240s, runner 300s. Reads ctx agent_id/workdir/profile/install/memory.
 18:55 ENV PROJECT_ID=moonfire26lon-423, REGION=europe-west2, GCS_BUCKET=moonfire26lon-423-crew (created), image europe-west2-docker.pkg.dev/moonfire26lon-423/crew/tester:latest. All in infra/env.sh.
 18:55 BLOCKED services enable fails: lab account must accept Cloud ToS in the console first. Bucket works already (storage was pre-enabled). Will deploy backend the minute it clears.

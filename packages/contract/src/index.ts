@@ -96,6 +96,8 @@ export interface RunState {
   compile?: CompileResult; run?: RunResult; screenshotUrl?: string; contributors?: Contributors;
   score: { total: number; dimensions: Partial<Record<Dimension, DimensionScore>> };
   report?: string; tokens: Tokens; presence: string[]; memoryHits: string[]; lastSeq: number;
+  /** Wall clock of the run: first event in, run.finished out. */
+  startedAt?: string; finishedAt?: string;
   /** Timestamps of recent activity, so the UI can animate from state alone. */
   recent: { findings: { id: string; ts: string }[]; hotChunks: Record<string, string> };
 }
@@ -113,10 +115,10 @@ export function apply(s: RunState, e: RunEvent): RunState {
   if (e.seq <= s.lastSeq) return s;
   const n: RunState = { ...s, lastSeq: e.seq };
   switch (e.type) {
-    case 'run.created': return { ...n, repoUrl: e.repoUrl, by: e.by, status: 'running' };
+    case 'run.created': return { ...n, repoUrl: e.repoUrl, by: e.by, status: 'running', startedAt: n.startedAt ?? e.ts };
     case 'presence.join': return { ...n, presence: n.presence.includes(e.name) ? n.presence : [...n.presence, e.name] };
     case 'presence.leave': return { ...n, presence: n.presence.filter(p => p !== e.name) };
-    case 'sandbox.started': return { ...n, runner: e.runner };
+    case 'sandbox.started': return { ...n, runner: e.runner, startedAt: n.startedAt ?? e.ts };
     case 'repo.profile': { const { type, seq, ts, runId, ...flat } = e as RunEvent & { profile?: RepoProfile }; void type; void seq; void ts; void runId; const p = (flat as { profile?: RepoProfile }).profile ?? (flat as unknown as RepoProfile); return { ...n, profile: { ...p, languages: p.languages ?? {}, files: p.files ?? [] } }; }
     case 'install.done': return { ...n, install: { ok: e.ok, manager: e.manager, durationMs: e.durationMs, errorsTail: e.errorsTail } };
     case 'chunk.created': return { ...n, chunks: [...n.chunks.filter(c => c.id !== e.chunk.id), e.chunk] };
@@ -151,7 +153,7 @@ export function apply(s: RunState, e: RunEvent): RunState {
     }
     case 'report.ready': return { ...n, report: e.markdown, score: { total: e.score, dimensions: e.dimensions }, tokens: e.tokens };
     case 'memory.hit': return { ...n, memoryHits: [...n.memoryHits, e.chunkId] };
-    case 'run.finished': return { ...n, status: e.status };
+    case 'run.finished': return { ...n, status: e.status, finishedAt: e.ts };
     case 'action': return n;
     default: return n;
   }

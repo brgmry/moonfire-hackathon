@@ -7,6 +7,17 @@ export type MenuItem = { label: string; onClick?: () => void; disabled?: boolean
 export type Menus = Record<"File" | "Edit" | "Special", MenuItem[]>;
 
 function fmtTok(n: number) { return n >= 1000 ? `${Math.round(n / 1000)}k tok` : `${n} tok`; }
+export function fmtDur(ms: number) { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+
+function Timer({ state }: { state: RunState }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { if (state.finishedAt) return; const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, [state.finishedAt]);
+  if (!state.startedAt) return null;
+  const end = state.finishedAt ? Date.parse(state.finishedAt) : now;
+  const ms = end - Date.parse(state.startedAt);
+  const done = !!state.finishedAt;
+  return <span className={`chip timer ${done ? "on" : ""}`} data-tip={done ? `finished in ${fmtDur(ms)}, from first event to run.finished` : "running: time since the first event"}>⏱ {fmtDur(ms)}</span>;
+}
 
 export function MenuBar({ state, connected, menus, title }: { state?: RunState; connected?: boolean; menus?: Menus; title?: string }) {
   const [clock, setClock] = useState("");
@@ -45,6 +56,7 @@ export function MenuBar({ state, connected, menus, title }: { state?: RunState; 
       ))}
       <span className="sp" />
       {state?.presence.map((p) => <span key={p} className="chip on" data-tip={`${p} has this run open`}>{p}</span>)}
+      {state && <Timer state={state} />}
       {state && <span className="chip" data-tip={`${state.tokens.in.toLocaleString()} in, ${state.tokens.out.toLocaleString()} out, ${cache}% served from cache`}>{fmtTok(tok)}</span>}
       {state && <span className={`chip ${connected ? "" : "off"}`} data-tip={connected ? "event stream connected" : "reconnecting to the backend"}>{connected ? "live" : "…"}</span>}
       <span data-tip="it is always 1984 somewhere">{clock}</span>

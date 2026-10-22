@@ -259,3 +259,5 @@ a.plain{color:inherit}
 .outcomes .ico{background:var(--ink);color:#fff;padding:4px 7px;font-family:var(--display);font-size:11px}
 .outcomes b{font-family:var(--display);font-size:12px;margin-top:4px}
 .outcomes span:last-child{font-size:11px;color:#555}
+.chip.timer{font-variant-numeric:tabular-nums;min-width:62px;text-align:center}
+.dock .timer{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--phosphor)}

@@ -2,6 +2,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Agent, Chunk, RunState } from "@rvr/contract";
 import { Sprite } from "./Sprite";
+import { fmtDur } from "./MenuBar";
 
 type Rect = { x: number; y: number; w: number; h: number };
 const DOCK = 24;
@@ -82,6 +83,7 @@ export function Screen({ state, now, grid = true, off = false, selChunk, pulse, 
         {docked.map((a) => { const found = !!a.lastFoundAt && now - Date.parse(a.lastFoundAt) < 1200; return <Sprite key={a.agentId} role={a.role} scale={1.25} frame={found ? "found" : a.status === "done" ? "idle" : (Math.floor(now / 250) % 2 ? "working" : "idle")} className={a.status === "done" ? "done" : ""} title={`${a.role} (${a.model}${a.status === "done" ? ", done" : ", working"})`} />; })}
         {state.compile && <span className="lbl" title={state.compile.command ? `ran: ${state.compile.command}` : "compile result"}>builds {state.compile.compiles ? `${Math.round(state.compile.durationMs / 1000)}s ${(state.compile.buildSizeBytes / 1e6).toFixed(1)}MB ${state.compile.warnings} warn` : "FAIL"}</span>}
         {state.run && <span className="lbl" title={state.run.errorsTail ? `last error: ${state.run.errorsTail}` : "run result"}>{state.run.kind === "api" ? `endpoints ${state.run.endpointsOk}/${state.run.endpointsTotal}` : `tests ${state.run.testsPassed}/${state.run.testsPassed + state.run.testsFailed}`}</span>}
+        {state.startedAt && <span className="lbl timer" title={state.finishedAt ? "wall clock, first event to finish" : "wall clock, running"}>⏱ {fmtDur((state.finishedAt ? Date.parse(state.finishedAt) : now) - Date.parse(state.startedAt))}</span>}
         {state.claims.length > 0 && <span className="lbl" title="README claims delivered in full">claims {state.claims.filter((c) => c.status === "delivered").length}/{state.claims.length}</span>}
       </div>}
     </div>

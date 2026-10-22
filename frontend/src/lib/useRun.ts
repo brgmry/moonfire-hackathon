@@ -34,7 +34,7 @@ export function useRun(id: string) {
         const r = await fetch(`${API}/runs/${id}`);
         if (!r.ok) return;
         const j = await r.json();
-        setState(Array.isArray(j.events) ? reduceAll(id, j.events as RunEvent[]) : fromServerState(j, id));
+        setState((prev) => { const next = Array.isArray(j.events) ? reduceAll(id, j.events as RunEvent[]) : fromServerState(j, id); return { ...next, startedAt: next.startedAt ?? prev.startedAt, finishedAt: next.finishedAt ?? prev.finishedAt }; });
       } catch { /* backend away, the stream will catch up */ }
     };
     const open = () => {

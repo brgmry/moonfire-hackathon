@@ -17,10 +17,19 @@ export function viewerName(): string {
   } catch { return "guest"; }
 }
 
+/** Real runs cost money: without the login cookie, send the person to /login and come back here. */
+export function requireLogin(next: string): boolean {
+  if (apiToken()) return true;
+  location.href = `/login?next=${encodeURIComponent(next)}`;
+  return false;
+}
+
 export async function createRun(repoUrl: string): Promise<string> {
+  if (!requireLogin(`/?repo=${encodeURIComponent(repoUrl)}`)) return new Promise(() => {});
   const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ repoUrl, by: viewerName() }) })
     .catch((x) => { throw new Error(`backend unreachable: ${(x as Error).message}`); });
   // 400s carry a message meant for people ("... was not found, or it is private").
+  if (r.status === 401) { requireLogin(`/?repo=${encodeURIComponent(repoUrl)}`); return new Promise(() => {}); }
   if (!r.ok) throw new Error((await r.json().catch(() => null))?.error ?? `backend said ${r.status}`);
   const j = await r.json();
   return j.id as string;

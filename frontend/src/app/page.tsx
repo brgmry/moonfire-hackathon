@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { MacFrame } from "@/components/Mac";
@@ -11,6 +11,8 @@ export default function Home() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  // Back from /login with the URL that was typed before the gate.
+  useEffect(() => { const r = new URLSearchParams(location.search).get("repo"); if (r) setUrl(r); }, []);
   async function go(e: React.FormEvent) {
     e.preventDefault();
     if (!/github\.com\/[^/\s]+\/[^/\s]+/i.test(url.trim())) { setErr("paste a github.com/owner/repo URL"); return; }

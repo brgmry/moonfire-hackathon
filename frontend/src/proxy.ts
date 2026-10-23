@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Site gate. Every page and route needs the rvr_auth cookie, except the login page, its API, and static assets. */
-const OPEN = ["/login", "/api/login", "/icon.svg", "/opengraph-image", "/favicon.ico"];
+/** Site gate. The home page, the pitch and the recorded demo are open. Real runs, the benchmark and anything that spends money need the rvr_auth cookie. */
+const OPEN = ["/", "/pitch", "/run/demo", "/fixtures", "/login", "/api/login", "/icon.svg", "/opengraph-image", "/favicon.ico"];
 
 async function expected(): Promise<string> {
   const secret = process.env.AUTH_SECRET ?? "", pw = process.env.SITE_PASSWORD ?? "";
@@ -12,7 +12,7 @@ async function expected(): Promise<string> {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (OPEN.some((p) => pathname === p || pathname.startsWith(p + "/"))) return NextResponse.next();
+  if (OPEN.some((p) => pathname === p || (p !== "/" && pathname.startsWith(p + "/")))) return NextResponse.next();
   const want = await expected();
   if (!want) return NextResponse.next(); // no password configured: open, for local dev
   if (req.cookies.get("rvr_auth")?.value === want) return NextResponse.next();

@@ -30,3 +30,4 @@ spike/data/
 # Anthropic keys for infra/add-keys.sh, deleted after upload
 infra/keys.local
 infra/site-token.local
+spike/data/

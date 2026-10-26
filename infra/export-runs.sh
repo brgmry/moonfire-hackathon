@@ -15,6 +15,9 @@ for line in sys.stdin:
     e = json.loads(line)
     if e.get("type") in ("presence.join", "presence.leave", "action"): continue
     if "by" in e: e["by"] = ""
+    # Third-party email addresses from git blame stay off the public site.
+    e.get("finding", {}).pop("authorEmail", None)
+    for a in (e.get("contributors") or e).get("authors") or []: a.pop("email", None)
     print(json.dumps(e, separators=(",", ":")))
 ' > "$OUT/$id.jsonl"
   echo "$id: $(wc -l < "$OUT/$id.jsonl") events"

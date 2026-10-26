@@ -1,12 +1,11 @@
-export const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+/** Every backend call goes through the same-origin proxy, which adds the API token from an httpOnly cookie.
+ *  Page scripts never hold the token; the browser sends the cookie on fetch and EventSource alike. */
+export const API = "/api/backend";
 
-/** The API token is set as a readable cookie by /api/login once the site password checks out. */
-export function apiToken(): string {
-  try { return decodeURIComponent(document.cookie.split("; ").find((c) => c.startsWith("rvr_token="))?.slice(10) ?? ""); } catch { return ""; }
+/** /api/login sets rvr_live next to the httpOnly token: a flag the page can read, worth nothing on its own. */
+export function loggedIn(): boolean {
+  try { return document.cookie.split("; ").includes("rvr_live=1"); } catch { return false; }
 }
-export function authHeaders(): Record<string, string> { const t = apiToken(); return t ? { Authorization: `Bearer ${t}` } : {}; }
-/** EventSource cannot set headers, so the stream URL carries the token. */
-export function withToken(url: string): string { const t = apiToken(); return t ? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(t)}` : url; }
 
 export function viewerName(): string {
   try {
@@ -17,13 +16,13 @@ export function viewerName(): string {
   } catch { return "guest"; }
 }
 
-/** Real runs cost money. Only a browser holding the API token (the team, after /login) or a local backend (npm run demo sets NEXT_PUBLIC_LIVE) talks to the backend; everyone else gets recorded runs. */
+/** Real runs cost money. Only a browser past /login (the team) or a local backend (npm run demo sets NEXT_PUBLIC_LIVE) talks to the backend; everyone else gets recorded runs. */
 export function live(): boolean {
-  return process.env.NEXT_PUBLIC_LIVE === "1" || Boolean(apiToken());
+  return process.env.NEXT_PUBLIC_LIVE === "1" || loggedIn();
 }
 
 export async function createRun(repoUrl: string): Promise<string> {
-  const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ repoUrl, by: viewerName() }) })
+  const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl, by: viewerName() }) })
     .catch((x) => { throw new Error(`backend unreachable: ${(x as Error).message}`); });
   // 400s carry a message meant for people ("... was not found, or it is private").
   if (r.status === 401) throw new Error("the API token was refused; log in again at /login");
@@ -33,5 +32,5 @@ export async function createRun(repoUrl: string): Promise<string> {
 }
 
 export async function sendAction(runId: string, type: string, extra: Record<string, unknown> = {}) {
-  await fetch(`${API}/runs/${runId}/actions`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ type, by: viewerName(), ...extra }) });
+  await fetch(`${API}/runs/${runId}/actions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, by: viewerName(), ...extra }) });
 }

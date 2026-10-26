@@ -20,13 +20,17 @@ export async function POST(req: NextRequest) {
   }
   FAILS.delete(ip);
   const res = NextResponse.json({ ok: true });
-  // Readable by the page so it can call the Cloud Run API directly; only someone past the password has it.
-  res.cookies.set("rvr_token", token, { httpOnly: false, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 7 });
+  const base = { sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 7 };
+  // The token never reaches page scripts: /api/backend reads it from the cookie and adds the bearer server-side.
+  res.cookies.set("rvr_token", token, { ...base, httpOnly: true });
+  // A flag the page may read, so it knows real runs are unlocked. Worth nothing on its own.
+  res.cookies.set("rvr_live", "1", { ...base, httpOnly: false });
   return res;
 }
 
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   res.cookies.set("rvr_token", "", { path: "/", maxAge: 0 });
+  res.cookies.set("rvr_live", "", { path: "/", maxAge: 0 });
   return res;
 }

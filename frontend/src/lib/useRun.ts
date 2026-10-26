@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { apply, fromServerState, initialState, reduceAll, type RunEvent, type RunState } from "@rvr/contract";
-import { API, authHeaders, live, viewerName, withToken } from "./api";
+import { API, live, viewerName } from "./api";
 import { recordedState } from "./recorded";
 
 /** One EventSource, one reducer, resync on focus. The only client state is what is on screen. */
@@ -35,7 +35,7 @@ export function useRun(id: string) {
     }
     const resync = async () => {
       try {
-        const r = await fetch(`${API}/runs/${id}`, { headers: authHeaders() });
+        const r = await fetch(`${API}/runs/${id}`);
         if (!r.ok) return;
         const j = await r.json();
         setState((prev) => { const next = Array.isArray(j.events) ? reduceAll(id, j.events as RunEvent[]) : fromServerState(j, id); return { ...next, startedAt: next.startedAt ?? prev.startedAt, finishedAt: next.finishedAt ?? prev.finishedAt }; });
@@ -43,7 +43,7 @@ export function useRun(id: string) {
     };
     const open = () => {
       if (closed) return;
-      const es = new EventSource(withToken(`${API}/runs/${id}/events?name=${encodeURIComponent(viewerName())}`));
+      const es = new EventSource(`${API}/runs/${id}/events?name=${encodeURIComponent(viewerName())}`);
       esRef.current = es;
       es.onopen = () => { setConnected(true); backoff = 500; };
       es.onmessage = (m) => {

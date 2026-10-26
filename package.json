@@ -2,7 +2,9 @@
   "name": "readme-vs-reality",
   "private": true,
   "workspaces": ["packages/*", "frontend"],
+  "engines": { "node": ">=22.18" },
   "scripts": {
+    "demo": "node scripts/demo.mjs",
     "dev": "npm run dev -w frontend",
     "fixture": "npm run fixture -w frontend"
   }

@@ -91,7 +91,7 @@ export function Desktop({ id }: { id: string }) {
         {missing && (
           <Window title="No recording of this run" className="report">
             <p>This site only plays recorded runs, so a visit never costs anyone money, and there is no recording for <b>{id}</b>.</p>
-            <p><a href="/run/demo">Watch the recorded demo</a>, open the <a href="/bench">benchmark</a>, or score any repo on your own laptop with your own key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">Try it</a>.</p>
+            <p><a href="/run/demo">Watch the recorded demo</a>, or score any repo on your own laptop with your own key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">Try it</a>.</p>
           </Window>
         )}
         {!hidden.has("about") && (

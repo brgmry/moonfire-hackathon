@@ -76,6 +76,21 @@ export default function Bench() {
     Special: [{ label: "Clear bucket filter", disabled: sel === null, onClick: () => setSel(null) }],
   };
   const shown = sel === null ? ranked : ranked.filter((r) => Math.min(9, Math.floor(r.score / 10)) === sel);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { load().then(() => setReady(true)); }, [load]);
+
+  // No backend and nothing recorded: say so rather than draw a board of zeros.
+  if (ready && !isLive && rows.length === 0) return (
+    <div className="desk">
+      <MenuBar menus={menus} title="Benchmark" />
+      <div className="grid">
+        <Window title="The benchmark is offline" className="home score">
+          <p>The benchmark ranked every repo the crew scored on Google Cloud. That backend was switched off after Build Night, and its runs went with it.</p>
+          <p><a href="/run/demo">Watch the recorded demo</a>, or score repos yourself with your own key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">run it locally</a>.</p>
+        </Window>
+      </div>
+    </div>
+  );
 
   return (
     <div className="desk">

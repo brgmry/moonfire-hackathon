@@ -50,7 +50,7 @@ export default function Home() {
             {offline && (
               <div className="empty" role="status">
                 This public site plays recorded runs only, so it never spends money on a stranger&apos;s click, and {offline} is not one of them yet.
-                Watch the <a href="/run/demo">recorded demo</a> or the <a href="/bench">benchmark</a>, or score it yourself with your own Anthropic key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">run it locally</a>.
+                Watch the <a href="/run/demo">recorded demo</a>, or score it yourself with your own Anthropic key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">run it locally</a>.
               </div>
             )}
             <div className="empty"><a href="/pitch" className="plain">the pitch</a> · goal, crew, result, autonomy</div>

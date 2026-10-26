@@ -5,6 +5,7 @@ import json
 import os
 import signal
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -101,9 +102,30 @@ def context_block(ctx: dict, workdir: str) -> str:
     return "\n".join(parts)
 
 
-def sub_env() -> dict:
-    env = dict(os.environ)
+# Repo code (installs, builds, tests, anything a shell runs inside the clone) gets this environment and
+# nothing else. An allowlist, so a new secret in the job's env can never reach it by default.
+PASS_THROUGH = ("PATH", "HOME", "LANG", "LC_ALL", "LC_CTYPE", "TERM", "TZ", "USER", "LOGNAME", "SHELL", "TMPDIR",
+                "GOPATH", "GOCACHE", "GOMODCACHE", "CARGO_HOME", "RUSTUP_HOME", "npm_config_cache",
+                "UV_CACHE_DIR", "PIP_CACHE_DIR", "PYTHONUNBUFFERED", "COREPACK_ENABLE_DOWNLOAD_PROMPT")
+
+
+def repo_env() -> dict:
+    env = {k: os.environ[k] for k in PASS_THROUGH if k in os.environ}
+    env.setdefault("HOME", tempfile.gettempdir())
+    env.setdefault("TMPDIR", tempfile.gettempdir())
     env.update({"CI": "1", "NO_COLOR": "1", "FORCE_COLOR": "0", "npm_config_yes": "true"})
+    return env
+
+
+def agent_env() -> dict:
+    """The env the compile and run agents' CLI gets: a key from the pool, handed over explicitly.
+    The process env holds no key (keys.load strips them), so nothing that forgets env= can leak one.
+    Known gap: the CLI's Bash tool passes its own env on to the repo commands the agent runs."""
+    import keys
+    _name, key = keys.pick()
+    env = {"CI": "1", "NO_COLOR": "1"}
+    if key:
+        env["ANTHROPIC_API_KEY"] = key
     return env
 
 
@@ -112,7 +134,7 @@ async def sh(cmd: str, cwd: str, timeout: float) -> tuple[int, str, int]:
     t0 = time.monotonic()
     posix = os.name == "posix"
     proc = await asyncio.create_subprocess_shell(
-        cmd, cwd=cwd, env=sub_env(), stdin=asyncio.subprocess.DEVNULL,
+        cmd, cwd=cwd, env=repo_env(), stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         start_new_session=posix)
     buf = bytearray()  # read incrementally so a timeout keeps what was printed before the hang
@@ -160,7 +182,7 @@ async def run_agent(name: str, user_prompt: str, workdir: str, agent_id: str,
     options = ClaudeAgentOptions(
         system_prompt=load_prompt(name), tools=["Bash"], allowed_tools=["Bash"], model=MODEL,
         cwd=workdir, permission_mode="bypassPermissions", max_turns=max_turns,
-        env={"CI": "1", "NO_COLOR": "1"})
+        env=agent_env())
     last_text, result_text = "", None
     async for msg in query(prompt=user_prompt, options=options):
         if isinstance(msg, AssistantMessage):

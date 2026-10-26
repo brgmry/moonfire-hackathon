@@ -31,6 +31,7 @@ import httpx
 
 import events
 import llm
+from k3common import repo_env
 
 SONNET = "claude-sonnet-5-5"
 HAIKU = "claude-haiku-5-5"
@@ -108,14 +109,10 @@ def split_ref(url: str) -> tuple[str, str | None]:
     return m.group(1), m.group(2) or m.group(3)
 
 
-SECRET_ENV = ("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEYS", "ANTHROPIC_AUTH_TOKEN", "INTERNAL_TOKEN")
-
-
 def sh(cmd, cwd=None, timeout=60) -> subprocess.CompletedProcess:
-    # Install scripts and git hooks are the repo's code: they get no API keys.
-    env = {k: v for k, v in os.environ.items() if k not in SECRET_ENV}
+    # Install scripts and git hooks are the repo's code: they run on the allowlist env, never the job's.
     return subprocess.run(cmd, cwd=cwd, timeout=timeout, capture_output=True, text=True,
-                          shell=isinstance(cmd, str), errors="replace", env=env)
+                          shell=isinstance(cmd, str), errors="replace", env=repo_env())
 
 
 # ---------- 1. clone and profile ----------

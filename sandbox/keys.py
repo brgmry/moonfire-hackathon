@@ -28,19 +28,18 @@ def _pairs(s: str) -> list[tuple[str, str]]:
 
 
 def load() -> None:
-    # Out of the environment once parsed, so repo code never sees all three keys.
+    # Every key comes out of the process environment once parsed. From here on a key only travels
+    # explicitly: llm.ask and k3common.agent_env hand one to the agent CLI, repo code gets none.
     _keys.update(_pairs(os.environ.pop("ANTHROPIC_API_KEYS", "")))
-    if not _keys and os.environ.get("ANTHROPIC_API_KEY"):
-        _keys["default"] = os.environ["ANTHROPIC_API_KEY"]
-    for name, w in _pairs(os.environ.get("ANTHROPIC_KEY_WEIGHTS", "")):
+    single = os.environ.pop("ANTHROPIC_API_KEY", "")
+    if not _keys and single:
+        _keys["default"] = single
+    os.environ.pop("ANTHROPIC_AUTH_TOKEN", None)
+    for name, w in _pairs(os.environ.pop("ANTHROPIC_KEY_WEIGHTS", "")):
         try:
             _weights[name] = float(w)
         except ValueError:
             pass
-    primary = max(_keys, key=lambda n: _weights.get(n, 0.0)) if _keys else None
-    # Agents that do not pick per query (compiler, runner) use the process env: give them the best key.
-    if primary:
-        os.environ["ANTHROPIC_API_KEY"] = _keys[primary]
 
 
 def pick(exclude: set[str] | frozenset = frozenset()) -> tuple[str | None, str | None]:

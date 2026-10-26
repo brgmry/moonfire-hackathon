@@ -4,19 +4,25 @@ import { useRouter } from "next/navigation";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { MacFrame } from "@/components/Mac";
 import { Window } from "@/components/Window";
-import { createRun } from "@/lib/api";
+import { createRun, live } from "@/lib/api";
+import { recordedRuns, repoKey } from "@/lib/recorded";
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [offline, setOffline] = useState("");
   const router = useRouter();
   // Back from /login with the URL that was typed before the gate.
   useEffect(() => { const r = new URLSearchParams(location.search).get("repo"); if (r) setUrl(r); }, []);
   async function go(e: React.FormEvent) {
     e.preventDefault();
     if (!/github\.com\/[^/\s]+\/[^/\s]+/i.test(url.trim())) { setErr("paste a github.com/owner/repo URL"); return; }
-    setBusy(true); setErr("");
+    setBusy(true); setErr(""); setOffline("");
+    // The public site never starts a run: a repo we have recorded opens that run, anything else gets the local instructions.
+    const hit = (await recordedRuns()).find((r) => repoKey(r.repoUrl) === repoKey(url));
+    if (hit) { router.push(`/run/${hit.id}`); return; }
+    if (!live()) { setOffline(repoKey(url)); setBusy(false); return; }
     try { router.push(`/run/${await createRun(url.trim())}`); }
     catch (x) { setErr((x as Error).message); setBusy(false); }
   }
@@ -41,6 +47,12 @@ export default function Home() {
               <button type="button" onClick={() => router.push("/run/demo")} data-tip="a scripted run, no backend needed">run the demo</button>
             </div>
             {err && <div className="err">{err}</div>}
+            {offline && (
+              <div className="empty" role="status">
+                This public site plays recorded runs only, so it never spends money on a stranger&apos;s click, and {offline} is not one of them yet.
+                Watch the <a href="/run/demo">recorded demo</a> or the <a href="/bench">benchmark</a>, or score it yourself with your own Anthropic key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">run it locally</a>.
+              </div>
+            )}
             <div className="empty"><a href="/pitch" className="plain">the pitch</a> · goal, crew, result, autonomy</div>
           </form>
         </Window>

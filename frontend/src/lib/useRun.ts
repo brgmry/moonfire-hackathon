@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { apply, fromServerState, initialState, reduceAll, type RunEvent, type RunState } from "@rvr/contract";
-import { API, authHeaders, viewerName, withToken } from "./api";
+import { API, authHeaders, live, viewerName, withToken } from "./api";
+import { recordedState } from "./recorded";
 
 /** One EventSource, one reducer, resync on focus. The only client state is what is on screen. */
 export function useRun(id: string) {
   const [state, setState] = useState<RunState>(() => initialState(id));
   const [now, setNow] = useState(() => Date.now());
   const [connected, setConnected] = useState(false);
+  // recorded: a finished run read from a static log, nothing is running. missing: no recording and no backend to ask.
+  const [recorded, setRecorded] = useState(id === "demo");
+  const [missing, setMissing] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -51,13 +55,19 @@ export function useRun(id: string) {
         backoff = Math.min(backoff * 2, 8000);
       };
     };
-    open();
     const onVis = () => { if (document.visibilityState === "visible") resync(); };
-    document.addEventListener("visibilitychange", onVis);
+    // A recorded run is served as a static file and never touches the backend.
+    recordedState(id).then((rec) => {
+      if (closed) return;
+      if (rec) { setState(rec); setRecorded(true); setConnected(true); return; }
+      if (!live()) { setMissing(true); return; }
+      open();
+      document.addEventListener("visibilitychange", onVis);
+    });
     return () => { closed = true; esRef.current?.close(); document.removeEventListener("visibilitychange", onVis); };
   }, [id]);
 
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
 
-  return { state, now, connected };
+  return { state, now, connected, recorded, missing };
 }

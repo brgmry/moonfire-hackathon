@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DIMENSIONS, fromServerState, type Dimension, type RunState } from "@rvr/contract";
-import { API, authHeaders, viewerName } from "@/lib/api";
+import { API, authHeaders, live, viewerName } from "@/lib/api";
+import { recordedRuns, recordedState } from "@/lib/recorded";
 import { MenuBar, type Menus } from "@/components/MenuBar";
 import { Window } from "@/components/Window";
 
@@ -21,7 +22,15 @@ export default function Bench() {
   const [toast, setToast] = useState("");
   const detailsRef = useRef<Record<string, RunState>>({});
 
+  const [isLive, setIsLive] = useState(false);
   const load = useCallback(async () => {
+    // Without the API token the benchmark is built from the recorded runs, served as static files.
+    if (!live()) {
+      const recs = await recordedRuns();
+      const got = await Promise.all(recs.map(async (x): Promise<Row | null> => { const d = await recordedState(x.id); return d ? { id: x.id, repoUrl: x.repoUrl, status: d.status, score: d.score.total, detail: d } : null; }));
+      setRows(got.filter((r): r is Row => r !== null));
+      return;
+    }
     try {
       const r = await fetch(`${API}/runs`, { headers: authHeaders() }); if (!r.ok) return;
       const list = (await r.json()) as Row[];
@@ -31,7 +40,7 @@ export default function Bench() {
       setRows(list.map((x) => ({ ...x, score: Number(x.score) || 0, detail: detailsRef.current[x.id] })));
     } catch { /* backend away */ }
   }, []);
-  useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
+  useEffect(() => { load(); setIsLive(live()); if (!live()) return; const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
   useEffect(() => { fetch("/bench-repos.json").then((r) => (r.ok ? r.json() : [])).then(setRepos).catch(() => setRepos([])); }, []);
 
   const done = useMemo(() => rows.filter((r) => (r.status === "complete" || r.status === "partial") && r.score > 0), [rows]);
@@ -70,7 +79,7 @@ export default function Bench() {
     <div className="desk">
       <MenuBar menus={menus} title="Benchmark" />
       <div className="bench">
-        <Window title="The field" className="b1" tip="every run on the backend, refreshed every 10 seconds">
+        <Window title="The field" className="b1" tip={isLive ? "every run on the backend, refreshed every 10 seconds" : "every recorded run"}>
           <div className="tiles">
             <div data-tip="runs with a score"><b>{done.length}</b><span>scored</span></div>
             <div data-tip="still in the sandbox"><b>{running}</b><span>running</span></div>
@@ -108,8 +117,9 @@ export default function Bench() {
         </Window>
 
         <Window title="Bulk run" className="b4" tip="queue repos from infra/bench-repos.json, two at a time">
-          {repos.length === 0 && <div className="empty">no repo list yet (infra/bench-repos.json)</div>}
-          {repos.length > 0 && (
+          {!isLive && <div className="empty">Bulk runs start real sandboxes, so they only run on your own laptop with your own key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">run it locally</a>.</div>}
+          {isLive && repos.length === 0 && <div className="empty">no repo list yet (infra/bench-repos.json)</div>}
+          {isLive && repos.length > 0 && (
             <div className="bulk">
               <div className="empty">{repos.length} curated repos: {["tiny", "mid", "famous"].map((t) => `${repos.filter((r) => r.tier === t).length} ${t}`).join(", ")}</div>
               <label htmlFor="n">queue <input id="n" type="number" min={1} max={repos.length} value={queue.n} onChange={(e) => setQueue((s) => ({ ...s, n: Math.max(1, Math.min(repos.length, Number(e.target.value) || 1)) }))} /> repos, about £{(queue.n * 0.75).toFixed(0)}</label>

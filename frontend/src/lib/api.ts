@@ -17,19 +17,16 @@ export function viewerName(): string {
   } catch { return "guest"; }
 }
 
-/** Real runs cost money: without the login cookie, send the person to /login and come back here. */
-export function requireLogin(next: string): boolean {
-  if (apiToken()) return true;
-  location.href = `/login?next=${encodeURIComponent(next)}`;
-  return false;
+/** Real runs cost money. Only a browser holding the API token (the team, after /login) or a local backend (npm run demo sets NEXT_PUBLIC_LIVE) talks to the backend; everyone else gets recorded runs. */
+export function live(): boolean {
+  return process.env.NEXT_PUBLIC_LIVE === "1" || Boolean(apiToken());
 }
 
 export async function createRun(repoUrl: string): Promise<string> {
-  if (!requireLogin(`/?repo=${encodeURIComponent(repoUrl)}`)) return new Promise(() => {});
   const r = await fetch(`${API}/runs`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ repoUrl, by: viewerName() }) })
     .catch((x) => { throw new Error(`backend unreachable: ${(x as Error).message}`); });
   // 400s carry a message meant for people ("... was not found, or it is private").
-  if (r.status === 401) { requireLogin(`/?repo=${encodeURIComponent(repoUrl)}`); return new Promise(() => {}); }
+  if (r.status === 401) throw new Error("the API token was refused; log in again at /login");
   if (!r.ok) throw new Error((await r.json().catch(() => null))?.error ?? `backend said ${r.status}`);
   const j = await r.json();
   return j.id as string;

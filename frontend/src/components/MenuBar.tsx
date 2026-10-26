@@ -19,7 +19,7 @@ function Timer({ state }: { state: RunState }) {
   return <span className={`chip timer ${done ? "on" : ""}`} data-tip={done ? `finished in ${fmtDur(ms)}, from first event to run.finished` : "running: time since the first event"}>⏱ {fmtDur(ms)}</span>;
 }
 
-export function MenuBar({ state, connected, menus, title }: { state?: RunState; connected?: boolean; menus?: Menus; title?: string }) {
+export function MenuBar({ state, connected, recorded, menus, title }: { state?: RunState; connected?: boolean; recorded?: boolean; menus?: Menus; title?: string }) {
   const [clock, setClock] = useState("");
   const [open, setOpen] = useState<keyof Menus | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -58,7 +58,8 @@ export function MenuBar({ state, connected, menus, title }: { state?: RunState; 
       {state?.presence.map((p) => <span key={p} className="chip on" data-tip={`${p} has this run open`}>{p}</span>)}
       {state && <Timer state={state} />}
       {state && <span className="chip" data-tip={`${state.tokens.in.toLocaleString()} in, ${state.tokens.out.toLocaleString()} out, ${cache}% served from cache`}>{fmtTok(tok)}</span>}
-      {state && <span className={`chip ${connected ? "" : "off"}`} data-tip={connected ? "event stream connected" : "reconnecting to the backend"}>{connected ? "live" : "…"}</span>}
+      {state && recorded && <span className="chip" data-tip="a recorded run, replayed from its event log: nothing is running and nothing is spent">recorded</span>}
+      {state && !recorded && <span className={`chip ${connected ? "" : "off"}`} data-tip={connected ? "event stream connected" : "reconnecting to the backend"}>{connected ? "live" : "…"}</span>}
       <span data-tip="it is always 1984 somewhere">{clock}</span>
     </div>
   );

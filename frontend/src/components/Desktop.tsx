@@ -18,7 +18,7 @@ import { Window } from "./Window";
 type WinId = "score" | "evidence" | "board" | "report" | "about";
 
 export function Desktop({ id }: { id: string }) {
-  const { state, now, connected } = useRun(id);
+  const { state, now, connected, recorded, missing } = useRun(id);
   const router = useRouter();
   const [sel, setSel] = useState<Dimension | null>(null);
   const [selChunk, setSelChunk] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function Desktop({ id }: { id: string }) {
       { label: "Copy report", disabled: !state.report, onClick: () => copy(state.report ?? "", "report") },
       { sep: true, label: "" },
       { label: "Clear filters", disabled: !sel && !selChunk, onClick: () => { setSel(null); setSelChunk(null); } },
-      { label: "Rerun selected chunk", tip: "asks the backend to re-explore it", disabled: !selChunk || id === "demo", onClick: () => { sendAction(id, "rerun_chunk", { chunkId: selChunk }).then(() => say("rerun requested")).catch(() => say("backend said no")); } },
+      { label: "Rerun selected chunk", tip: "asks the backend to re-explore it", disabled: !selChunk || recorded, onClick: () => { sendAction(id, "rerun_chunk", { chunkId: selChunk }).then(() => say("rerun requested")).catch(() => say("backend said no")); } },
     ],
     Special: [
       { label: "Grid", checked: grid, tip: "the phosphor grid behind the treemap", onClick: () => setGrid((g) => !g) },
@@ -77,7 +77,7 @@ export function Desktop({ id }: { id: string }) {
 
   return (
     <div className="desk">
-      <MenuBar state={state} connected={connected} menus={menus} />
+      <MenuBar state={state} connected={connected} recorded={recorded || state.runner === "mock"} menus={menus} />
       <div className={`grid ${stage ? "stage" : ""}`}>
         <StickyNote url={url} stage={stage} onCopy={() => copy(url, "URL")} />
         <MacFrame>
@@ -88,6 +88,12 @@ export function Desktop({ id }: { id: string }) {
         {!stage && !hidden.has("evidence") && <EvidenceWindow state={state} sel={sel} selChunk={selChunk} onClearChunk={() => setSelChunk(null)} onFinding={(f) => highlight(f.chunkId)} onClose={() => hide("evidence")} />}
         {!stage && !hidden.has("board") && <Leaderboard state={state} onAuthor={(chunkIds) => { if (chunkIds[0]) { setSelChunk(chunkIds[0]); highlight(chunkIds[0]); show("evidence"); } }} onClose={() => hide("board")} />}
         {!hidden.has("report") && <ReportWindow state={state} onCopy={() => copy(state.report ?? "", "report")} onClose={() => hide("report")} />}
+        {missing && (
+          <Window title="No recording of this run" className="report">
+            <p>This site only plays recorded runs, so a visit never costs anyone money, and there is no recording for <b>{id}</b>.</p>
+            <p><a href="/run/demo">Watch the recorded demo</a>, open the <a href="/bench">benchmark</a>, or score any repo on your own laptop with your own key: <a href="https://github.com/brgmry/readme-vs-reality#try-it">Try it</a>.</p>
+          </Window>
+        )}
         {!hidden.has("about") && (
           <Window title="About README vs Reality" className="report" id="win-about" onClose={() => hide("about")}>
             <p><b>Every README is a pitch deck.</b> We read the code, built it, ran it and scored it.</p>

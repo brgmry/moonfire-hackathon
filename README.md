@@ -14,11 +14,11 @@ Paste a GitHub URL. A crew of AI agents clones it into a throwaway Google Cloud 
 builds it, runs it, checks every promise in its README, and returns a score out of 100.<br>
 Every point traces back to a file, a line and a quote.
 
-**[Try it on shipitornot.com](https://shipitornot.com)** · [Pitch](https://shipitornot.com/pitch) · [Benchmark](https://shipitornot.com/bench) · [Recorded demo](https://shipitornot.com/run/demo) · [A real run](https://shipitornot.com/run/r_a650c3) · [Demo script](DEMO.md)
+**[Watch the demo](https://shipitornot.com/run/demo)** · [Pitch](https://shipitornot.com/pitch) · [Run it locally](#try-it) · [Demo script](DEMO.md)
 
 <br>
 
-<a href="https://shipitornot.com/run/r_a650c3"><img src="docs/img/run.jpg" alt="A finished run on typicode/json-server: score 83 of 100, per-dimension bars, findings with the author of each line, a contributor leaderboard and the written report" width="820"></a>
+<a href="https://shipitornot.com/run/demo"><img src="docs/img/run.jpg" alt="A finished run on typicode/json-server: score 83 of 100, per-dimension bars, findings with the author of each line, a contributor leaderboard and the written report" width="820"></a>
 
 <sub>A real run on <code>typicode/json-server</code>. The agents work inside the Mac, over a map of the repo. Each finding names who wrote the line.</sub>
 
@@ -104,17 +104,19 @@ A repo with no build system still gets 5 of 10 on compiles, and one with no test
 
 ## Real runs on Google Cloud
 
+Measured on Build Night, 22 Oct 2026. The backend and its event logs are gone, so these runs are no longer hosted.
+
 | Repo | Score | Kind | Cost | What the crew found |
 |---|:---:|:---:|:---:|---|
-| [**typicode/json-server**](https://shipitornot.com/run/r_a650c3)<br><sub>tag v1.0.0-beta.3</sub> | **82.5** | api | £0.06 | 6 of 6 README endpoints answer, 80/80 tests pass, clean build (24 KB, 0 warnings). 13 of 16 claims delivered and 3 partial: `PATCH /profile` writes `{ item, ...body }` instead of merging into the stored object, and a POSTed numeric id breaks the "ids are always strings" promise. 14 findings name the author of the line. |
-| [**un33k/python-slugify**](https://shipitornot.com/run/r_7465c6)<br><sub>planned by Opus 5.5</sub> | **78.1** | lib | £0.07 | 133/133 tests pass (5 skipped) and the README quickstart exits 0. 20 of 20 claims delivered. The planner sampled 4 of 7 chunks. |
-| [**ErickKS/vite-deploy**](https://shipitornot.com/run/r_bd84c4) | **67.4** | web | £0.03 | The dev server answers and the build is 151 KB, but there are no tests. 6 of 9 claims delivered. |
+| **typicode/json-server**<br><sub>tag v1.0.0-beta.3</sub> | **82.5** | api | £0.06 | 6 of 6 README endpoints answer, 80/80 tests pass, clean build (24 KB, 0 warnings). 13 of 16 claims delivered and 3 partial: `PATCH /profile` writes `{ item, ...body }` instead of merging into the stored object, and a POSTed numeric id breaks the "ids are always strings" promise. 14 findings name the author of the line. |
+| **un33k/python-slugify**<br><sub>planned by Opus 5.5</sub> | **78.1** | lib | £0.07 | 133/133 tests pass (5 skipped) and the README quickstart exits 0. 20 of 20 claims delivered. The planner sampled 4 of 7 chunks. |
+| **ErickKS/vite-deploy** | **67.4** | web | £0.03 | The dev server answers and the build is 151 KB, but there are no tests. 6 of 9 claims delivered. |
 
 The pinned commits, setup timings and earlier runs are in [infra/demo-repos.md](infra/demo-repos.md).
 
 ## Benchmark
 
-[shipitornot.com/bench](https://shipitornot.com/bench) reads every run on the backend and refreshes every ten seconds: a score histogram, mean and p90, where repos lose points by dimension, a ranked table with each repo's percentile and weakest dimension, and the money spent. The bulk window queues repos from [infra/bench-repos.json](infra/bench-repos.json), a curated spread of 100 public repos across four languages: 30 tiny and unknown, 40 mid, 30 famous but small enough to install in minutes. It asks twice before spending anything.
+The benchmark page reads every run on the backend and refreshes every ten seconds: a score histogram, mean and p90, where repos lose points by dimension, a ranked table with each repo's percentile and weakest dimension, and the money spent. The bulk window queues repos from [infra/bench-repos.json](infra/bench-repos.json), a curated spread of 100 public repos across four languages: 30 tiny and unknown, 40 mid, 30 famous but small enough to install in minutes. It asks twice before spending anything.
 
 ## Autonomy, disclosed
 
@@ -124,7 +126,7 @@ The pinned commits, setup timings and earlier runs are in [infra/demo-repos.md](
 
 ## Try it
 
-**On the site, no login.** [shipitornot.com](https://shipitornot.com) plays recorded runs only: the [demo](https://shipitornot.com/run/demo), the recorded real runs and the [benchmark](https://shipitornot.com/bench) are open to anyone. Pasting a repo we have recorded opens its run; any other repo points you here. A click on the public site never starts a sandbox or calls a model.
+**On the site, no login.** The Google Cloud backend was switched off after Build Night, so [shipitornot.com](https://shipitornot.com) is the UI with a [scripted demo run](https://shipitornot.com/run/demo) on a sample repo: the Mac, the crew, the score, the evidence and the report, replayed from an event log in the same format the real runs used. Pasting a repo points you here. A click on the public site never starts a sandbox or calls a model.
 
 **On your laptop, no keys, no cloud, no cost.** Node 22.18 or later.
 

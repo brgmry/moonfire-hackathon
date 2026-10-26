@@ -23,22 +23,24 @@ export default function Bench() {
   const detailsRef = useRef<Record<string, RunState>>({});
 
   const [isLive, setIsLive] = useState(false);
+  const recordedRef = useRef<Row[] | null>(null);
   const load = useCallback(async () => {
-    // Without the API token the benchmark is built from the recorded runs, served as static files.
-    if (!live()) {
+    // Recorded runs are static files, so they are always on the board; the backend's runs join them for a logged-in team.
+    if (!recordedRef.current) {
       const recs = await recordedRuns();
       const got = await Promise.all(recs.map(async (x): Promise<Row | null> => { const d = await recordedState(x.id); return d ? { id: x.id, repoUrl: x.repoUrl, status: d.status, score: d.score.total, detail: d } : null; }));
-      setRows(got.filter((r): r is Row => r !== null));
-      return;
+      recordedRef.current = got.filter((r): r is Row => r !== null);
     }
+    const rec = recordedRef.current;
+    if (!live()) { setRows(rec); return; }
     try {
-      const r = await fetch(`${API}/runs`, { headers: authHeaders() }); if (!r.ok) return;
-      const list = (await r.json()) as Row[];
+      const r = await fetch(`${API}/runs`, { headers: authHeaders() }); if (!r.ok) { setRows(rec); return; }
+      const list = ((await r.json()) as Row[]).filter((x) => !rec.some((y) => y.id === x.id));
       const want = list.filter((x) => x.status !== "created" && !detailsRef.current[x.id]).slice(0, 120);
       let i = 0;
       await Promise.all(Array.from({ length: 6 }, async () => { while (i < want.length) { const x = want[i++]; try { const d = await fetch(`${API}/runs/${x.id}`, { headers: authHeaders() }); if (d.ok) detailsRef.current[x.id] = fromServerState(await d.json(), x.id); } catch { /* skip */ } } }));
-      setRows(list.map((x) => ({ ...x, score: Number(x.score) || 0, detail: detailsRef.current[x.id] })));
-    } catch { /* backend away */ }
+      setRows([...rec, ...list.map((x) => ({ ...x, score: Number(x.score) || 0, detail: detailsRef.current[x.id] }))]);
+    } catch { setRows(rec); /* backend away */ }
   }, []);
   useEffect(() => { load(); setIsLive(live()); if (!live()) return; const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
   useEffect(() => { fetch("/bench-repos.json").then((r) => (r.ok ? r.json() : [])).then(setRepos).catch(() => setRepos([])); }, []);

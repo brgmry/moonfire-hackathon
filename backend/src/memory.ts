@@ -64,12 +64,7 @@ export function lookup(key: string | null): { runId: string; score: number } | n
 }
 
 export function learnFromEvent(s: RunState, e: Event) {
-  if (e.type === "install.done" && e.ok && e.manager && e.command) {
-    if (mem.recipes[e.manager] !== e.command) {
-      mem.recipes[e.manager] = e.command;
-      save();
-    }
-  }
+  // Install commands are never learned: a sandbox runs untrusted code and could teach every later run a command of its choosing.
   if (e.type === "finding.dropped" && e.reason === "classifier_disagreed") {
     const f = s.findings.find((x) => x.id === e.findingId);
     if (f?.note) {

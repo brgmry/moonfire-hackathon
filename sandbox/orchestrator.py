@@ -139,7 +139,7 @@ def clone(repo_url: str, workdir: str, ref: str | None = None) -> str:
     # A sha, tag or branch: fetch just that history so the demo repos stay pinned.
     os.makedirs(dest, exist_ok=True)
     for cmd in (["git", "init", "-q"], ["git", "remote", "add", "origin", repo_url],
-                ["git", "fetch", "-q", "--depth", "50", "--no-tags", "origin", ref], ["git", "checkout", "-q", "FETCH_HEAD"]):
+                ["git", "fetch", "-q", "--depth", "50", "--no-tags", "origin", "--", ref], ["git", "checkout", "-q", "FETCH_HEAD"]):
         try:
             r = sh(cmd, cwd=dest, timeout=180)
         except subprocess.TimeoutExpired:
@@ -270,7 +270,8 @@ def profile_repo(repo: str, repo_url: str, files: list[str]) -> dict:
 def default_install(manager: str | None, memory: dict) -> str | None:
     if not manager:
         return None
-    return (memory.get("recipes") or {}).get(manager) or DEFAULT_INSTALL.get(manager)
+    # Learned recipes came from earlier sandboxes, which ran untrusted code: only the fixed defaults run here.
+    return DEFAULT_INSTALL.get(manager)
 
 
 def install(repo: str, manager: str | None, memory: dict, command: str | None = None) -> dict:

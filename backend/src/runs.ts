@@ -34,7 +34,7 @@ const SCORE_TRIGGERS = new Set([
 ]);
 
 export function newRunId(): string {
-  return "r_" + randomBytes(3).toString("hex");
+  return "r_" + randomBytes(8).toString("hex");
 }
 
 export function createRun(id: string, repoUrl: string, by?: string): Run {

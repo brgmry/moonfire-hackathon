@@ -12,6 +12,8 @@ import type { Event, RunState } from "./types.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const INTERNAL_TOKEN = (process.env.INTERNAL_TOKEN ?? "dev").trim();
+// On Cloud Run both secrets must be there: without them /internal/events or the public routes would be open to anyone.
+if (process.env.RUNNER === "cloudrun" && (INTERNAL_TOKEN === "dev" || !process.env.SITE_TOKEN?.trim())) throw new Error("INTERNAL_TOKEN and SITE_TOKEN must be set when RUNNER=cloudrun");
 const ORIGINS = (process.env.CORS_ORIGIN ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const runner = pickRunner();
 
@@ -23,7 +25,7 @@ app.use(
     origin: (origin) => {
       if (!origin) return origin;
       if (ORIGINS.includes("*") || ORIGINS.includes(origin)) return origin;
-      if (origin.startsWith("http://localhost:") || origin.endsWith(".vercel.app")) return origin;
+      if (origin.startsWith("http://localhost:")) return origin;
       return null;
     },
     allowHeaders: ["Content-Type", "Authorization", "Last-Event-ID"],
@@ -38,7 +40,9 @@ app.use("*", async (c, next) => {
   if (!SITE_TOKEN || c.req.method === "OPTIONS") return next();
   const path = new URL(c.req.url).pathname;
   if (path === "/health" || path === "/healthz" || path.startsWith("/internal/")) return next();
-  const given = (c.req.header("Authorization")?.replace(/^Bearer\s+/i, "") ?? c.req.query("token") ?? "").trim();
+  // ?token= only on the event stream, the one route EventSource calls; it lands in request logs, so nowhere else.
+  const query = /^\/runs\/[^/]+\/events$/.test(path) ? c.req.query("token") : undefined;
+  const given = (c.req.header("Authorization")?.replace(/^Bearer\s+/i, "") ?? query ?? "").trim();
   const a = Buffer.from(given), b = Buffer.from(SITE_TOKEN);
   if (a.length === b.length && timingSafeEqual(a, b)) return next();
   return c.json({ error: "password required" }, 401);
@@ -71,6 +75,8 @@ export function normalizeRepoUrl(raw: string): { url: string; owner: string; rep
   if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) return null;
   const hashSha = /^#[0-9a-f]{7,40}$/i.test(u.hash) ? u.hash.slice(1) : undefined;
   const pin = hashSha ?? atRef ?? (["tree", "commit", "blob"].includes(kind ?? "") ? ref : undefined);
+  // The ref reaches git fetch: no leading dash, nothing but ref characters.
+  if (pin !== undefined && !/^[A-Za-z0-9_.][A-Za-z0-9_./-]*$/.test(pin)) return null;
   const base = `https://github.com/${owner}/${repo}`;
   const url = !pin ? base : /^[0-9a-f]{7,40}$/i.test(pin) ? `${base}#${pin}` : `${base}/tree/${pin}`;
   return { url, owner, repo };
@@ -92,9 +98,13 @@ async function repoExists(owner: string, repo: string): Promise<boolean> {
 const MAX_ACTIVE = Number(process.env.MAX_ACTIVE_RUNS ?? 6);
 const PER_IP_PER_HOUR = Number(process.env.RUNS_PER_IP_PER_HOUR ?? 10);
 const startsByIp = new Map<string, number[]>();
+const MAX_RERUNS = 3;
+const rerunsByRun = new Map<string, number>();
+// Cloud Run appends the caller's address last; anything before it is whatever the client sent.
+const clientIp = (xff: string | undefined) => (xff ?? "").split(",").at(-1)!.trim() || "local";
 
 app.post("/runs", async (c) => {
-  const ip = (c.req.header("x-forwarded-for") ?? "").split(",")[0].trim() || "local";
+  const ip = clientIp(c.req.header("x-forwarded-for"));
   const now = Date.now();
   const starts = (startsByIp.get(ip) ?? []).filter((t) => now - t < 3600_000);
   if (starts.length >= PER_IP_PER_HOUR) return c.json({ error: `${starts.length} runs from your network in the last hour; try again later` }, 429);
@@ -196,6 +206,17 @@ app.post("/runs/:id/actions", async (c) => {
   if (!run) return c.json({ error: "not found" }, 404);
   const body = await c.req.json().catch(() => ({}));
   if (!["rerun_chunk", "pin"].includes(body.type)) return c.json({ error: "type must be rerun_chunk or pin" }, 400);
+  if (body.type === "rerun_chunk" && body.chunkId) {
+    // A rerun is a new sandbox: same caps as a new run, only on a finished run, a few per run.
+    if (!["complete", "partial"].includes(run.state.status)) return c.json({ error: "rerun a chunk once the run has finished" }, 409);
+    if ((rerunsByRun.get(id) ?? 0) >= MAX_RERUNS) return c.json({ error: `${MAX_RERUNS} reruns per run` }, 429);
+    if (activeRuns() >= MAX_ACTIVE) return c.json({ error: `the crew is busy with ${MAX_ACTIVE} runs; try again in a minute` }, 429);
+    const ip = clientIp(c.req.header("x-forwarded-for")), now = Date.now();
+    const starts = (startsByIp.get(ip) ?? []).filter((t) => now - t < 3600_000);
+    if (starts.length >= PER_IP_PER_HOUR) return c.json({ error: `${starts.length} runs from your network in the last hour; try again later` }, 429);
+    startsByIp.set(ip, [...starts, now]);
+    rerunsByRun.set(id, (rerunsByRun.get(id) ?? 0) + 1);
+  }
   appendEvent(id, { type: "action", action: body.type, chunkId: body.chunkId, findingId: body.findingId, by: body.by });
   if (body.type === "rerun_chunk" && body.chunkId) void runner.rerunChunk(run.state, body.chunkId);
   return c.json({ ok: true });

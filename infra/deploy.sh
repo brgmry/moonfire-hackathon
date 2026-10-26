@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# K4: deploy the backend service, then point the job at it. Usage: infra/deploy.sh [vercel-origin]
+# K4: deploy the backend service, then point the job at it. Usage: infra/deploy.sh https://shipitornot.com
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source infra/env.sh
-CORS=${1:-${CORS_ORIGIN:-*}}
+CORS=${1:-${CORS_ORIGIN:?pass the site origin, e.g. https://shipitornot.com}}
 gcloud run deploy api --source ./backend --region "$REGION" --min-instances 1 --max-instances 1 \
   --no-cpu-throttling --timeout 3600 --allow-unauthenticated --port 8080 \
   --set-secrets "$SECRETS" \

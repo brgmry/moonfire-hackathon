@@ -39,7 +39,7 @@ test("a mock run streams end to end over SSE", async () => {
   const r = await postJson(`${server.url}/runs`, { repoUrl: "https://github.com/acme/pulse-cli", by: "e2e", fresh: true });
   assert.equal(r.status, 200);
   runId = r.body.id;
-  assert.match(runId, /^r_[0-9a-f]{6}$/);
+  assert.match(runId, /^r_[0-9a-f]{16}$/);
   events = await collect(`${server.url}/runs/${runId}/events?name=e2e-viewer`, { until: finished, timeoutMs: 60_000 });
   const c = countBy(events);
   for (const t of ["repo.profile", "install.done", "chunk.created", "agent.spawned", "finding.added", "claim.added", "compile.done", "run.done", "contributors", "score.updated", "report.ready", "run.finished"]) {

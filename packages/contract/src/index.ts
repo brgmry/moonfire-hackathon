@@ -144,7 +144,8 @@ export function apply(s: RunState, e: RunEvent): RunState {
     case 'claim.added': return { ...n, claims: [...n.claims.filter(c => c.id !== e.claim.id), e.claim] };
     case 'compile.done': { const { type, seq, ts, runId, ...r } = e as RunEvent & { result?: CompileResult }; void type; void seq; void ts; void runId; return { ...n, compile: ((r as { result?: CompileResult }).result ?? (r as unknown as CompileResult)) }; }
     case 'run.done': { const { type, seq, ts, runId, ...r } = e as RunEvent & { result?: RunResult }; void type; void seq; void ts; void runId; return { ...n, run: ((r as { result?: RunResult }).result ?? (r as unknown as RunResult)) }; }
-    case 'app.screenshot': return { ...n, screenshotUrl: e.url };
+    // The sandbox picks this URL and every viewer loads it: only inline images or our bucket, never an arbitrary host.
+    case 'app.screenshot': return /^(data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+|https:\/\/storage\.googleapis\.com\/[\w./-]+)$/.test(e.url ?? '') ? { ...n, screenshotUrl: e.url } : n;
     case 'contributors': { const c = (e as RunEvent & { contributors?: Contributors }).contributors ?? { authors: e.authors ?? [], truncated: !!e.truncated, fork: !!e.fork }; return { ...n, contributors: c }; }
     case 'score.updated': {
       const dimensions = { ...n.score.dimensions, [e.dimension]: { points: e.points, max: e.max, top: e.top ?? [], note: e.note } };

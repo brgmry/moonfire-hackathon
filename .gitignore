@@ -20,7 +20,6 @@ sandbox/.venv/
 
 # runtime data
 backend/data/
-spike/data/
 
 # os and editors
 .DS_Store
@@ -30,4 +29,3 @@ spike/data/
 # Anthropic keys for infra/add-keys.sh, deleted after upload
 infra/keys.local
 infra/site-token.local
-spike/data/

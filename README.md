@@ -71,7 +71,7 @@ flowchart LR
 
 - **Sandboxes are disposable.** Untrusted code only runs inside a job container that keeps nothing after it exits. The loop and the state live in the backend.
 - **Nothing is lost.** Every event is appended to Cloud Storage, so a backend restart replays every run.
-- **The crew learns.** Memory keeps install commands that worked and findings the classifier overruled, so later explorers don't repeat them. A repo at a commit we've already scored is answered from memory.
+- **The crew learns.** Memory keeps findings the classifier overruled, so later explorers don't repeat them. Install commands are fixed per package manager and never learned from a sandbox, since sandboxes run untrusted code. A repo at a commit we've already scored is answered from memory.
 
 ## The crew
 
@@ -122,17 +122,23 @@ The pinned commits, setup timings and earlier runs are in [infra/demo-repos.md](
 
 **Human:** someone pastes the URL, we picked the demo repos in advance, and [`/run/demo`](https://shipitornot.com/run/demo) replays a recorded run as a fallback.
 
-## Run it yourself
+## Try it
 
-**UI only, no keys.** A fixture server speaks the same API as the backend.
+**On the site, no login.** [shipitornot.com](https://shipitornot.com) plays recorded runs only: the [demo](https://shipitornot.com/run/demo), the recorded real runs and the [benchmark](https://shipitornot.com/bench) are open to anyone. Pasting a repo we have recorded opens its run; any other repo points you here. A click on the public site never starts a sandbox or calls a model.
+
+**On your laptop, no keys, no cloud, no cost.** Node 22.18 or later.
 
 ```bash
+git clone https://github.com/brgmry/readme-vs-reality && cd readme-vs-reality
 npm install
-npm run fixture   # fake backend on :4000
-npm run dev       # frontend on :3000, then open /run/demo
+npm run demo      # frontend on :3000, fixture backend on :4000
 ```
 
-**Real agents on your laptop.** Needs `ANTHROPIC_API_KEY` and Python 3.12.
+Open http://localhost:3000 and paste any GitHub URL: the fixture backend replays a recorded run under it, labelled "recorded". Ports taken? `WEB_PORT=3100 API_PORT=4100 npm run demo`.
+
+## Run it for real
+
+**Real agents on your laptop, optional.** Bring your own `ANTHROPIC_API_KEY` (you pay for your runs) and Python 3.12.
 
 ```bash
 pip install -r sandbox/requirements.txt

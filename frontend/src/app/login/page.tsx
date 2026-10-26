@@ -14,7 +14,7 @@ function Form() {
     e.preventDefault(); setBusy(true); setErr("");
     const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw }) }).catch(() => null);
     setBusy(false);
-    if (r?.ok) { router.replace(next.startsWith("/") ? next : "/"); router.refresh(); } else setErr("wrong password");
+    if (r?.ok) { router.replace(/^\/(?![/\\])/.test(next) ? next : "/"); router.refresh(); } else setErr("wrong password");
   };
   return (
     <form className="login" onSubmit={submit}>
@@ -32,7 +32,7 @@ export default function Login() {
       <div className="menubar"><span className="logo" aria-hidden="true" /><span>README vs Reality</span></div>
       <div className="loginwrap">
         <div className="loginmac"><MacFrame><div className="screen off locked" aria-hidden="true">🔒</div></MacFrame></div>
-        <Window title="Private build" className="home" tip="password from Bergen, Allen or Akshay">
+        <Window title="Private build" className="home" tip="for the team: unlocks real runs. Everything else on the site is open.">
           <Suspense><Form /></Suspense>
         </Window>
       </div>
